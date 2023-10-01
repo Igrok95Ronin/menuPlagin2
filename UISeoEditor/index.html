@@ -1,0 +1,379 @@
+<div class="jquery-right-menu unselectable">
+    <div class="headeR">
+        Pages <span class="total_pages"><!-- Количество страниц --></span><div id="hide_menu">–</div>
+    </div>
+    <div class="jquery-menu">
+        <div class="add_page" id="add_page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+            </svg> СОЗДАТЬ
+        </div>
+        <div class="pages_list">
+            <div class="pages_list_item"><!-- Список страниц --></div>
+        </div>
+    </div>
+</div>
+<div class="jquery-center-menu unselectable">
+    <div class="headeR">
+        Page creation <span class="numberOfCities"></span><div id="hide_menu">–</div>
+    </div>
+    <div class="jquery-menu">
+        <div class="flex-container">
+            <div class="wraper">
+                <textarea id="selected-text" name="selectedText" class="selected_checkboxes"></textarea><!-- Выделенные поля -->
+                <div class="cities_list">
+                    <textarea id="selected-city" placeholder="Список городов..."  name="selectedCity">
+Moscow
+Grozny
+Sochi
+                    </textarea>
+                    <input id="characters" type="text" name="characters" placeholder="Количество символов" required="">
+                    <button id="submit-button">ОТПРАВИТЬ</button>
+                </div>
+            </div>
+            <!-- - Начните каждую адаптацию с названия соответствующего города, после которого должно следовать двоеточие.
+- Убедитесь, что каждый текст обрамлен квадратными скобками [ ] и полон смысла.
+             -->
+            <textarea id="systemMessage" name="systemMessage">
+Основные требования:
+
+- Тексты для адаптации исключительно на НЕМЕЦКОМ языке.
+- Для каждого города создайте уникальную и смысловую адаптацию каждого из указанных выше текстов.
+- Стремитесь сделать каждую адаптацию уникальной для каждого города, сохраняя при этом первоначальный смысл исходного текста.
+- Все тексты должны быть только на НЕМЕЦКОМ языке.
+
+Пожалуйста, строго следуйте этим требованиям.
+            </textarea>
+        </div>
+    </div>
+</div>
+
+<div class="jquery-logs-menu">
+    <div class="headeR">
+        Logs<div id="hide_menu">–</div>
+    </div>
+    <div class="jquery-menu">
+        <div class="logs-list"><textarea id="systemLogs" placeholder="Логи" readonly></textarea></div>
+    </div>
+</div>
+
+
+<!-- Здесь HTML код спиннера -->
+<div id="spinner" style="display:none;">
+    <div class="loader">
+        <div class="inner one"></div>
+        <div class="inner two"></div>
+        <div class="inner three"></div>
+    </div>
+</div>
+
+<style>
+
+    :root {
+        --center-menu-width: 600px;
+        --center-menu-height: 300px;
+    }
+
+    .jquery-menu.active {
+        display: none;
+    }
+
+    #hide_menu {
+        float: right;
+        cursor: pointer;
+        padding-right: 5px;
+    }
+
+    .add_page {
+        background: #fff;
+        padding: 4px;
+        padding-top: 5px;
+        text-align: center;
+        cursor: pointer;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .add_page:hover {
+        color: red
+    }
+
+    .add_page svg {
+        vertical-align: bottom;
+    }
+
+    .add_page:hover svg path {
+        fill: red;
+    }
+
+    .pages_list {
+        height: calc(var(--center-menu-height) - 51px);
+    }
+
+    .pages_list_item a {
+        display: block;
+        text-decoration: none;
+        color: #000;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 3px;
+    }
+
+    .pages_list_item a::before {
+        content: "➝ ";
+        display: inline;
+    }
+
+    .pages_list_item a:hover {
+        background: #ccc;
+    }
+
+    .pages_list {
+        background: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: left;
+        color: #000;
+        overflow-y: auto;
+    }
+
+    .logs-list {
+        height: var(--center-menu-height)
+    }
+
+    .logs-list textarea {
+        width: 100%;
+        height: 100%;
+        padding: 5px;
+    }
+
+    .headeR {
+        background: #666;
+        padding: 2px;
+        font-weight: 600;
+        text-align: center;
+        color: #fff;
+        cursor: move;
+    }
+
+    .jquery-right-menu,
+    .jquery-logs-menu,
+    .jquery-center-menu {
+        background-color: #fff;
+        display: none;
+        border: 1px solid #ccc;
+        padding: 1px;
+        position: fixed;
+        font-size: 14px;
+        z-index: 999;
+        font-family: sans-serif;
+    }
+
+    .jquery-right-menu {
+        width: 215px;
+        top: 5px;
+        right: 5px;
+    }
+
+    .jquery-logs-menu {
+        width: 805px;
+        top: calc(var(--center-menu-height) + 24px);
+        right: 15px;
+        z-index: 999999;
+    }
+
+    .jquery-center-menu {
+        min-width: var(--center-menu-width);
+        max-width: var(--center-menu-width);
+        top: 5px;
+        right: 220px;
+    }
+
+    .jquery-right-menu.active,
+    .jquery-logs-menu.active,
+    .jquery-center-menu.active {
+        display: block;
+    }
+
+    .custom-checkbox {
+        margin-right: 5px;
+    }
+
+    .selected_items {
+        padding-left: 5px;
+        overflow-y: auto;
+    }
+
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+
+    .selected_checkboxes,
+    .cities_list {
+        border: 1px solid #ccc;
+        margin: 5px;
+
+    }
+
+    .selected_checkboxes {
+        width: 70%;
+        overflow-y: auto;
+        max-height: calc(var(--center-menu-height) - 15px)
+    }
+
+    .cities_list {
+        width: 30%;
+    }
+
+    .cities_list textarea {
+        width: 100%;
+        height: calc(var(--center-menu-height) - 65px);
+        border: none;
+        resize: none;
+        padding: 5px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    #submit-button {
+        font-weight: bold;
+        width: 100%;
+        padding: 5px;
+        border: none;
+        background: #666;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #submit-button:hover {
+        background: #777;
+    }
+
+    .truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: calc(var(--center-menu-width) - 200px);
+    }
+
+    .unselectable {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+/* --- */
+.wraper {
+    display: flex;
+    width: 100%;
+}
+#systemMessage {
+    height: 240px;
+    padding: 5px;
+}
+.mainElement{
+
+}
+
+/*****Стили для спиннера*/
+#spinner{
+
+}
+.darkFon::before{
+    content: '';
+    background-color: #000;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+    position: fixed;
+    z-index: 9999;
+}
+.loader {
+    position: fixed;
+    top: calc(50% - 32px);
+    left: calc(50% - 32px);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    perspective: 800px;
+    z-index: 9999;
+}
+
+.inner {
+    position: absolute;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.inner.one {
+    left: 0%;
+    top: 0%;
+    animation: rotate-one 1s linear infinite;
+    border-bottom: 3px solid #0b0bf1;
+}
+
+.inner.two {
+    right: 0%;
+    top: 0%;
+    animation: rotate-two 1s linear infinite;
+    border-right: 3px solid #09f609;
+}
+
+.inner.three {
+    right: 0%;
+    bottom: 0%;
+    animation: rotate-three 1s linear infinite;
+    border-top: 3px solid #8f052a;
+}
+
+@keyframes rotate-one {
+    0% {
+        transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+    }
+    100% {
+        transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+    }
+}
+
+@keyframes rotate-two {
+    0% {
+        transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+    }
+    100% {
+        transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+    }
+}
+
+@keyframes rotate-three {
+    0% {
+        transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+    }
+    100% {
+        transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+    }
+}
+/* Стили для блока Pages */
+.pages_list_item{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.pageWrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.linkPage {
+
+}
+.deletePage {
+
+}
+
+</style>

@@ -1,0 +1,31 @@
+
+{
+  "manifest_version": 3,
+  "name": "Ali JS",
+  "version": "1.0",
+  "host_permissions": [
+    "http://localhost:8080/*"
+  ],
+  "permissions": [
+    "tabs"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://nubify.ru/*"
+      ],
+      "js": [
+        "index.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html"],
+      "matches": ["https://nubify.ru/*"]
+    }
+  ]
+}
