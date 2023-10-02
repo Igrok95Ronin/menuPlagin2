@@ -203,64 +203,76 @@ document.addEventListener('click', function(event) {
 
 !(function() {
 
+    function timeout(ms) {
+        return new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Таймаут запроса после ${ms} миллисекунд`));
+            }, ms);
+        });
+    }
     //Запрос к GPT
-function queryToGPT(){
-    sendNewRequest();
-     // Показать спиннер перед отправкой запроса
-     document.getElementById("spinner").style.display = "block";
-     document.body.classList.add('darkFon')//Затемняем фон при спинере
-
-
-     // Получаем DOM элементов формы
-    const selectedText = document.getElementById('selected-text').value,
-        selectedCity = document.getElementById('selected-city').value,
-        systemMessage = document.getElementById('systemMessage').value,
-        charCountElement = document.getElementById('characters').value,
-        systemLogs = document.getElementById('systemLogs');
-
-    // Отправляем данные на сервер
-    fetch('/apigptPlagin', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            'selectedText': selectedText,
-            'selectedCity': selectedCity,
-            'systemMessage': systemMessage,
-            'charCountElement': charCountElement,
+    function queryToGPT() {
+        sendNewRequest();
+        document.getElementById("spinner").style.display = "block";
+        document.body.classList.add('darkFon');
+    
+        const selectedText = document.getElementById('selected-text').value;
+        const selectedCity = document.getElementById('selected-city').value;
+        const systemMessage = document.getElementById('systemMessage').value;
+        const charCountElement = document.getElementById('characters').value;
+        // const systemLogs = document.getElementById('systemLogs'); // Переменная объявлена, но не используется
+    
+        Promise.race([
+            fetch('/apigptPlagin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'selectedText': selectedText,
+                    'selectedCity': selectedCity,
+                    'systemMessage': systemMessage,
+                    'charCountElement': charCountElement,
+                }),
+                timeout: 300000, // установите подходящий таймаут
+            }),
+            timeout(300000) // 5 минут = 300000 миллисекунд
+        ])
+        .then(response => {
+            if (response.status === 504) {
+                console.error('Ошибка: Тайм-аут шлюза');
+                // Вы можете добавить здесь дополнительную логику обработки ошибки
+                // например, показать сообщение пользователю
+                throw new Error('Тайм-аут шлюза'); // Этот код перейдет в блок catch
+            } else if (response.ok) {
+                return response.text();
+            } else {
+                throw new Error('Ошибка на сервере');
+            }
         })
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.text();
-        } else {
-            throw new Error('Ошибка на сервере');
-        }
-    })
-    .then(data => {
-        //В поле логи добавляем с сервера
-        // systemLogs.value = data;
-        
-        // Обработка ответа от сервера, если это необходимо
-        sendToGoServer(data)
-
-        //Отпарвка запроса на серве для добавления созданных страниц в блок Pages
-        showPagesInPageBlockPlagin()
-        // Скрыть спиннер после завершения запроса
-        document.getElementById("spinner").style.display = "none";
-        document.body.classList.remove('darkFon')//Убераем затемнение фона
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-
-        // Скрыть спиннер после завершения запроса
-        document.getElementById("spinner").style.display = "none";
-        document.body.classList.remove('darkFon')//Убераем затемнение фона
-    });
-
-
-}
+        .then(data => {
+            // В поле логи добавляем с сервера (если это нужно, раскомментируйте строчку ниже)
+            // systemLogs.value = data;
+            
+            // Обработка ответа от сервера, если это необходимо
+            sendToGoServer(data);
+    
+            // Отправка запроса на сервер для добавления созданных страниц в блок Pages
+            showPagesInPageBlockPlagin();
+            
+            // Скрыть спиннер после завершения запроса
+            document.getElementById("spinner").style.display = "none";
+            document.body.classList.remove('darkFon');
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            
+            // Скрыть спиннер после завершения запроса
+            document.getElementById("spinner").style.display = "none";
+            document.body.classList.remove('darkFon');
+        });
+    }
+    
 
 window.isNewRequest = false; // глобальная переменная для отслеживания нового запроса
 // Функция для создания Вебсокит соединения
@@ -318,7 +330,7 @@ function initiateWebSocket() {
         console.log('Вебсокет закрыт:', event);
 
         // Переподключение через 5 секунд после закрытия
-        setTimeout(initiateWebSocket, 5000);
+        setTimeout(initiateWebSocket, 1);
     });
 
 }
