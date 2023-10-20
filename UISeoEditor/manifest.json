@@ -1,9 +1,9 @@
-
 {
   "manifest_version": 3,
   "name": "Ali JS",
   "version": "1.0",
   "host_permissions": [
+    "http://localhost:8080/*",
     "https://nubify.ru/*"
   ],
   "permissions": [
@@ -15,7 +15,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://nubify.ru/*"
+        "http://localhost:8080/sites/*/*/",
+        "https://nubify.ru/sites/*/*/"
       ],
       "js": [
         "index.js"
@@ -25,7 +26,11 @@
   "web_accessible_resources": [
     {
       "resources": ["index.html"],
-      "matches": ["https://nubify.ru/*"]
+      "matches": [
+        "http://localhost:8080/*",
+        "https://nubify.ru/*"
+      ]
     }
   ]
 }
+

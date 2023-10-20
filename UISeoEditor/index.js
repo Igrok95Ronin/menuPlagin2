@@ -1,3 +1,5 @@
+//http://localhost:8080/
+// https://nubify.ru/
 // Создаем XMLHttpRequest для чтения index.html
 const xhr = new XMLHttpRequest();
 xhr.open('GET', chrome.runtime.getURL('index.html'), true);
@@ -19,7 +21,7 @@ document.addEventListener("click", function (e) {
         menu.classList.toggle('active'); 
     }
 
-    if (e.target.closest('#submit-button')) {
+    if (e.target.closest('#submit-buttonPlagin')) {
         const menu = document.querySelector('.jquery-logs-menu');
         menu.classList.add('active'); //не скрывать форму при повторном нажатии
     }
@@ -30,7 +32,6 @@ document.addEventListener('keydown', function (e) {
     if (e.code === 'KeyM') {
         const rightMenu = document.querySelector('.jquery-right-menu');
         const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu');
-
         // Переключение для .jquery-right-menu
         rightMenu.classList.toggle('active');
 
@@ -38,7 +39,8 @@ document.addEventListener('keydown', function (e) {
             // Если jquery-right-menu активен, то выполняем ваш код
             modul.showPagesInPageBlockPlagin();
             modul.numberOfCities();
-            document.querySelectorAll('h1, h2, h3, h4, h5, div, p, strong').forEach(addCheckbox);
+            modul.deleteAllPage();
+            document.querySelectorAll('.editable').forEach(addCheckbox);
 
             // Проверка наличия systemLogs и инициализация WebSocket, если еще не инициализировано
             const logsTextarea = document.getElementById('systemLogs');
@@ -109,7 +111,7 @@ function addCheckbox(element) {
         }
 
         // Добавляет чекбокс, если длина текста больше 10 символов.
-        if (allText && allText.length > 10) {
+        if (allText && allText.length > 1) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'custom-checkbox';
@@ -130,15 +132,12 @@ function addCheckbox(element) {
     }
 }
 
-
-
 // Функция для удаления чекбоксов
 function removeCheckboxes() {
     document.querySelectorAll('.custom-checkbox').forEach(function (checkbox) {
         checkbox.remove();
     });
 }
-
 
 // свернуть развернуть меню при нажатии на кнопку
 document.addEventListener("click", function (e) {
@@ -194,7 +193,7 @@ document.addEventListener('mouseup', () => {
 /* ----- */
 //Запрос то что будет происходить при нажатии кнопки Отправить
 document.addEventListener('click', function(event) {
-    if (event.target.matches('#submit-button')) {
+    if (event.target.matches('#submit-buttonPlagin')) {
         //Запрос к GPT
         modul.queryToGPT()
     }
@@ -203,76 +202,205 @@ document.addEventListener('click', function(event) {
 
 !(function() {
 
-    function timeout(ms) {
-        return new Promise((_, reject) => {
-            setTimeout(() => {
-                reject(new Error(`Таймаут запроса после ${ms} миллисекунд`));
-            }, ms);
-        });
-    }
-    //Запрос к GPT
-    function queryToGPT() {
-        sendNewRequest();
-        document.getElementById("spinner").style.display = "block";
-        document.body.classList.add('darkFon');
+function timeout(ms) {
+    return new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(new Error(`Таймаут запроса после ${ms} миллисекунд`));
+        }, ms);
+    });
+}
+
+//Запрос к GPT
+// async function queryToGPT() {
+//     sendNewRequest(); // Инициализация нового запроса
+
+//     // Отображение индикатора загрузки и установка темного фона во время обработки запроса
+//     document.getElementById("spinner").style.display = "block";
+//     document.body.classList.add('darkFon');
+
+//     const spinnerLogsTime = document.querySelector('.spinnerLogsTime'); // Получение элемента для вывода времени
+//     const selectedText = document.getElementById('selected-text').value; // Получение выбранного текста
+//     const selectedCityString = document.getElementById('selected-city').value; // Получение строки с городами
+//     const systemMessage = document.getElementById('systemMessagePlagin').value; // Получение системного сообщения
+//     const charCountElement = document.getElementById('characters').value; // Получение количества символов
+//     const logsDiv = document.getElementById('systemLogs'); // Получение div для логов
+//     const logsList = document.querySelector('.logs-list'); // Получение списка логов
+
+//     const cityArray = selectedCityString.split('\n'); // Преобразование строки с городами в массив
+
+//     const startTime = new Date(); // Запись времени начала запроса
+
+//     // Запуск интервала для обновления времени, прошедшего с начала запроса
+//     const intervalId = setInterval(() => {
+//         const now = new Date(); // Текущее время
+//         const timeElapsed = now - startTime; // Время, прошедшее с начала запроса, в миллисекундах
+//         const minutes = Math.floor(timeElapsed / 60000); // Перевод миллисекунд в минуты
+//         const seconds = ((timeElapsed % 60000) / 1000).toFixed(0); // Получение оставшихся секунд
+//         const milliseconds = (timeElapsed % 1000).toFixed(0); // Получение миллисекунд
+//         spinnerLogsTime.textContent = `${minutes}:${seconds.padStart(2, '0')}.${milliseconds.padStart(3, '0')}`; // Обновление текста элемента
+//     }, 100);
+
+//     const MAX_RETRIES = 3; // максимальное количество попыток
+//     // Обход массива городов
+//     for (const [cityIndex, city] of cityArray.entries()) {
+//         let retries = 0; // счетчик текущих попыток
     
-        const selectedText = document.getElementById('selected-text').value;
-        const selectedCity = document.getElementById('selected-city').value;
-        const systemMessage = document.getElementById('systemMessage').value;
-        const charCountElement = document.getElementById('characters').value;
-        // const systemLogs = document.getElementById('systemLogs'); // Переменная объявлена, но не используется
+//         while (retries < MAX_RETRIES) {
+//             try {
+//                 // Отправка запроса на сервер с одним городом
+//                 const response = await Promise.race([
+//                     fetch('/apigptPlagin', {
+//                         method: 'POST',
+//                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+//                         body: new URLSearchParams({ selectedText, 'selectedCity': city.trim(), systemMessage, charCountElement, 'cityIndex': cityIndex }),
+//                     }),
+//                     timeout(120000) // Таймаут запроса - 2 минуты
+//                 ]);
     
-        Promise.race([
-            fetch('/apigptPlagin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'selectedText': selectedText,
-                    'selectedCity': selectedCity,
-                    'systemMessage': systemMessage,
-                    'charCountElement': charCountElement,
-                }),
-                timeout: 300000, // установите подходящий таймаут
-            }),
-            timeout(300000) // 5 минут = 300000 миллисекунд
-        ])
-        .then(response => {
-            if (response.status === 504) {
-                console.error('Ошибка: Тайм-аут шлюза');
-                // Вы можете добавить здесь дополнительную логику обработки ошибки
-                // например, показать сообщение пользователю
-                throw new Error('Тайм-аут шлюза'); // Этот код перейдет в блок catch
-            } else if (response.ok) {
-                return response.text();
-            } else {
-                throw new Error('Ошибка на сервере');
+//                 if (!response.ok) { // Если сервер вернул ошибку
+//                     console.error(`Ошибка с городом ${city}:`, response.status);
+//                     logsDiv.innerHTML += `Ошибка с городом ${city}: ${response.status}<br>`;
+//                     retries++; // увеличиваем счетчик попыток
+//                     continue;
+//                 }
+    
+//                 const data = await response.text(); // Получение текста ответа сервера
+//                 sendToGoServer(data); // Отправка данных на Go-сервер
+//                 break; // если успешно, выходим из цикла while
+//             } catch (error) {
+//                 // Вывод информации об ошибке в консоль и в div для логов
+//                 console.error(`Ошибка с городом ${city}:`, error);
+//                 logsDiv.innerHTML += `Ошибка с городом ${city}: ${error}<br>`;
+//                 retries++; // увеличиваем счетчик попыток
+//             }
+    
+//             // Если достигнуто максимальное количество попыток, прекращаем попытки
+//             if (retries == MAX_RETRIES) {
+//                 logsDiv.innerHTML += `Превышено максимальное количество попыток для города ${city}.<br>`;
+//             }
+    
+//             // Задержка в 1 секунду перед следующей попыткой или перед следующим городом
+//             await new Promise(resolve => setTimeout(resolve, 1000));
+//         }
+//     }
+
+//     clearInterval(intervalId); // Остановка таймера
+
+//     // Вычисление и вывод общего времени обработки запроса
+//     const endTime = new Date();
+//     const elapsedTime = endTime - startTime; // Это даст вам время в миллисекундах
+//     const minutes = Math.floor(elapsedTime / 60000); // Количество минут
+//     const seconds = ((elapsedTime % 60000) / 1000).toFixed(0); // Оставшиеся секунды
+//     const milliseconds = (elapsedTime % 1000).toFixed(0); // Оставшиеся миллисекунды
+    
+//     logsDiv.innerHTML += `<p class='TotalRequestProcessingTime'>Общее время обработки запроса: ${minutes} минут, ${seconds.padStart(2, '0')} секунд, ${milliseconds.padStart(3, '0')} миллисекунд.</p>`;
+    
+
+//     logsList.scrollTop = logsList.scrollHeight; // Автоматическая прокрутка списка логов вниз
+
+//     // Завершение обработки запроса: скрытие индикатора загрузки, возвращение нормального фона
+//     showPagesInPageBlockPlagin();
+//     document.getElementById("spinner").style.display = "none";
+//     document.body.classList.remove('darkFon');
+// }
+async function queryToGPT() {
+    sendNewRequest(); // Инициализация нового запроса
+
+    // Отображение индикатора загрузки и установка темного фона во время обработки запроса
+    document.getElementById("spinner").style.display = "block";
+    document.body.classList.add('darkFon');
+
+    const spinnerLogsTime = document.querySelector('.spinnerLogsTime'); // Получение элемента для вывода времени
+    const selectedText = document.getElementById('selected-text').value; // Получение выбранного текста
+    const selectedCityString = document.getElementById('selected-city').value; // Получение строки с городами
+    const systemMessage = document.getElementById('systemMessagePlagin').value; // Получение системного сообщения
+    const charCountElement = document.getElementById('characters').value; // Получение количества символов
+    const logsDiv = document.getElementById('systemLogs'); // Получение div для логов
+    const logsList = document.querySelector('.logs-list'); // Получение списка логов
+
+    const cityArray = selectedCityString.split('\n'); // Преобразование строки с городами в массив
+    const textArray = selectedText.split(']').map(str => str.replace('[', '').trim()).filter(Boolean); // Разбиваем текст на строки
+    
+    const startTime = new Date(); // Запись времени начала запроса
+
+    // Запуск интервала для обновления времени, прошедшего с начала запроса
+    const intervalId = setInterval(() => {
+        const now = new Date(); 
+        const timeElapsed = now - startTime;
+        const minutes = Math.floor(timeElapsed / 60000);
+        const seconds = ((timeElapsed % 60000) / 1000).toFixed(0);
+        const milliseconds = (timeElapsed % 1000).toFixed(0);
+        spinnerLogsTime.textContent = `${minutes}:${seconds.padStart(2, '0')}.${milliseconds.padStart(3, '0')}`;
+    }, 100);
+
+    const MAX_RETRIES = 3;
+
+    // Обход массива городов
+    for (const [cityIndex, city] of cityArray.entries()) {
+        let textIndex = textArray.length,// Получаем количество строк города
+            lineCity = 1;// устонавливаем первый индекс для первого города
+        if(lineCity >= textIndex){ // если индекс строки больше или равно общему количеству строк то присваиваем 1
+            lineCity = 1;
+        }
+        for (const [_, text] of textArray.entries()) {
+            let retries = 0;
+
+            while (retries < MAX_RETRIES) {
+                try {
+                    // Отправка запроса на сервер с одним городом и одной строкой текста
+                    const response = await Promise.race([
+                        fetch('/apigptPlagin', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({ 'selectedText': text, 'selectedCity': city.trim(), systemMessage, charCountElement, 'cityIndex': cityIndex, 'textIndex': lineCity++, 'totalNumberOfLines' : textIndex }),
+                        }),
+                        timeout(120000)
+                    ]);
+
+                    if (!response.ok) {
+                        console.error(`Ошибка с городом ${city} и текстом ${text}:`, response.status);
+                        logsDiv.innerHTML += `Ошибка с городом ${city} и текстом ${text}: ${response.status}<br>`;
+                        retries++;
+                        continue;
+                    }
+
+                    const data = await response.text();
+                    sendToGoServer(data);
+                    break;
+
+                } catch (error) {
+                    console.error(`Ошибка с городом ${city} и текстом ${text}:`, error);
+                    logsDiv.innerHTML += `Ошибка с городом ${city} и текстом ${text}: ${error}<br>`;
+                    retries++;
+                }
+
+                if (retries == MAX_RETRIES) {
+                    logsDiv.innerHTML += `Превышено максимальное количество попыток для города ${city} и текста ${text}.<br>`;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-        })
-        .then(data => {
-            // В поле логи добавляем с сервера (если это нужно, раскомментируйте строчку ниже)
-            // systemLogs.value = data;
-            
-            // Обработка ответа от сервера, если это необходимо
-            sendToGoServer(data);
-    
-            // Отправка запроса на сервер для добавления созданных страниц в блок Pages
-            showPagesInPageBlockPlagin();
-            
-            // Скрыть спиннер после завершения запроса
-            document.getElementById("spinner").style.display = "none";
-            document.body.classList.remove('darkFon');
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            
-            // Скрыть спиннер после завершения запроса
-            document.getElementById("spinner").style.display = "none";
-            document.body.classList.remove('darkFon');
-        });
+        }
     }
+
+    clearInterval(intervalId);
+
+    const endTime = new Date();
+    const elapsedTime = endTime - startTime;
+    const minutes = Math.floor(elapsedTime / 60000);
+    const seconds = ((elapsedTime % 60000) / 1000).toFixed(0);
+    const milliseconds = (elapsedTime % 1000).toFixed(0);
+
+    logsDiv.innerHTML += `<p class='TotalRequestProcessingTime'>Общее время обработки запроса: ${minutes} минут, ${seconds.padStart(2, '0')} секунд, ${milliseconds.padStart(3, '0')} миллисекунд.</p>`;
     
+    logsList.scrollTop = logsList.scrollHeight;
+
+    showPagesInPageBlockPlagin();
+    document.getElementById("spinner").style.display = "none";
+    document.body.classList.remove('darkFon');
+}
+
+
 
 window.isNewRequest = false; // глобальная переменная для отслеживания нового запроса
 // Функция для создания Вебсокит соединения
@@ -297,7 +425,9 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
+    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
     window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
+
 
 
     window.socket.addEventListener('open', (event) => {
@@ -309,27 +439,28 @@ function initiateWebSocket() {
     });
 
     window.socket.addEventListener('message', (event) => {
-        const logsTextarea = document.getElementById('systemLogs');
-        if (logsTextarea) {
-            // Если это новый запрос, очистите поле логов
+        const logsDiv = document.getElementById('systemLogs'),
+              logsList = document.querySelector('.logs-list');
+        if (logsDiv) {
             if(window.isNewRequest) {
-                logsTextarea.value = '';
-                window.isNewRequest = false; // сбросить флаг нового запроса
+                logsDiv.innerHTML = ''; // Используйте внутренний HTML вместо значения
+                window.isNewRequest = false;
             }
-            // Добавление нового сообщения в поле логов
-            logsTextarea.value += event.data + '\n';
-
-        // Автоматическая прокрутка вниз
-        logsTextarea.scrollTop = logsTextarea.scrollHeight;
+    
+            // Добавьте новый HTML-контент. Убедитесь, что он очищен, чтобы предотвратить XSS-атаки.
+            logsDiv.innerHTML += event.data; // Добавление разрыва строки с помощью <br>
+    
+            // Автоматическая прокрутка вниз
+            logsList.scrollTop = logsList.scrollHeight;
         } else {
-            console.error('Текстовое поле для логов не найдено!');
+            console.error('Log container not found!');
         }
     });
 
     window.socket.addEventListener('close', (event) => {
         console.log('Вебсокет закрыт:', event);
 
-        // Переподключение через 5 секунд после закрытия
+        // Переподключение через 1 секунд после закрытия
         setTimeout(initiateWebSocket, 1);
     });
 
@@ -384,12 +515,21 @@ function showPagesInPageBlockPlagin() {
             // Проверяем, есть ли поле 'error' в ответе
             if (data.error) {
                 // Обрабатываем ошибку, если она есть
-                console.error('Server error:', data.error);
+                // console.error('Страницы не найдены:', data.message);
             } else {
                 // Если ошибки нет, обрабатываем данные
                 const pages_list_item = document.querySelector('.pages_list_item');
                 const total_pages = document.querySelector('.total_pages');
+                const btnDeleteAllPages = document.querySelector('.deleteAllPages');
                 total_pages.textContent = data.total_files;
+
+                // Показывать или скрывать кнопку Удалить все
+                if(+total_pages.textContent > 0){
+                    btnDeleteAllPages.style.display = "block"
+                } else {
+                    btnDeleteAllPages.style.display = "none"
+                }
+
                 pages_list_item.innerHTML = '';
                 data.files_with_html.forEach((link, i) => {
                     pages_list_item.innerHTML += `
@@ -403,7 +543,7 @@ function showPagesInPageBlockPlagin() {
         })
         .catch(error => {
             // Ловим и выводим в консоль любые ошибки
-            console.error('Ошибка:', error);
+            // console.error('Ошибка:', error);
         });
     } else {
         // Если переменные region или service не определены
@@ -411,10 +551,10 @@ function showPagesInPageBlockPlagin() {
     }
 }
 
-
-// Удалить созданные страницы
+// Удалить одну страницу
 function deletePage(region, service) {
     const deleteBtn = document.querySelectorAll('.deletePage');
+    const btnDeleteAllPages = document.querySelector('.deleteAllPages');
     deleteBtn.forEach(deleteP => {
         deleteP.addEventListener('click', function() {
             const link = this.getAttribute('data-link');
@@ -424,6 +564,12 @@ function deletePage(region, service) {
             total_pages--;  
             document.querySelector('.total_pages').textContent = total_pages;
 
+            // Показывать или скрывать кнопку Удалить все
+            if(total_pages > 0){
+                btnDeleteAllPages.style.display = "block"
+            } else {
+                btnDeleteAllPages.style.display = "none"
+            }
 
             // Поиск ближайшего родительского элемента с классом 'pageWrapper' и изменение его стиля
             const pageWrapper = this.closest('.pageWrapper');
@@ -457,6 +603,42 @@ function deletePage(region, service) {
     });
 }
 
+// Удалить все страницы
+function deleteAllPage() {
+    const btnDeleteAllPages = document.querySelector('.deleteAllPages');
+    btnDeleteAllPages.addEventListener('click', function() {
+        // Обнуляем счетчик количества страниц, список городов и саму кнопку
+        document.querySelector('.total_pages').textContent = "";
+        document.querySelector('.pages_list_item').innerHTML = "";
+        btnDeleteAllPages.style.display = 'none';
+
+        // Создаем объект для хранения параметров запроса
+        var data = new URLSearchParams();
+        // Добавляем параметры region, service и link к запросу
+        data.append('region', region);
+        data.append('service', service);
+        
+        // Выполняем запрос к серверу с использованием fetch и методом POST
+        fetch('/deleteAllPagesPlagin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: data.toString()
+        })
+        // Обрабатываем полученные данные
+        .then(response => response.json())
+        .then(data => {
+            // Добавьте здесь ваш код для обработки ответа, если необходимо.
+        })
+        // В случае возникновения ошибки выводим ее в консоль
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+    });
+
+}
+
 // Функция отправки текста на сервер Go для создания LadingPage
 async function sendToGoServer(text) {
     const checkedCheckboxes = getCheckedCheckboxes();  // Получение массива отмеченных чекбоксов
@@ -478,16 +660,28 @@ async function sendToGoServer(text) {
     }
 }
 
-// Функция для получения всех отмеченных чекбоксов
+// Массив для хранения порядка отмеченных чекбоксов
+let checkedOrder = [];
+
+// Обработчик события изменения (change) на родительском элементе (тело документа)
+document.body.addEventListener('change', (event) => {
+    // Проверка, является ли измененный элемент чекбоксом
+    if (event.target.type === 'checkbox') {
+        // Если чекбокс был отмечен
+        if (event.target.checked) {
+            // Добавляем имя чекбокса в массив
+            checkedOrder.push(event.target.name);
+        } else {
+            // Если чекбокс был снят, удаляем его имя из массива
+            checkedOrder = checkedOrder.filter(name => name !== event.target.name);
+        }
+    }
+});
+
+// Функция для получения списка имен всех отмеченных чекбоксов в порядке их выбора
 function getCheckedCheckboxes() {
-   const checkboxes = document.querySelectorAll('input[type="checkbox"]');  // Получение всех чекбоксов
-   let checkedValues = [];  // Массив для хранения отмеченных чекбоксов
-   checkboxes.forEach(checkbox => {
-       if (checkbox.checked) {
-           checkedValues.push(checkbox.name);  // Добавление значения чекбокса в массив, если он отмечен
-       }
-   });
-   return checkedValues;  // Возвращение массива отмеченных чекбоксов
+    // Возвращаем копию массива, чтобы изолировать оригинальный массив от внешних изменений
+    return [...checkedOrder];
 }
 
 // Функция для подсчета количество введенных городов
@@ -512,7 +706,6 @@ function numberOfCities() {
 }
 
 
-
 //----Модули
 window.modul = {
     queryToGPT,
@@ -520,6 +713,7 @@ window.modul = {
     showPagesInPageBlockPlagin,
     numberOfCities,
     initiateWebSocket,
+    deleteAllPage,
 }
 
 })()
