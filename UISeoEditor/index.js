@@ -210,99 +210,15 @@ function timeout(ms) {
     });
 }
 
-//Запрос к GPT
-// async function queryToGPT() {
-//     sendNewRequest(); // Инициализация нового запроса
+let stopRequests = false;
 
-//     // Отображение индикатора загрузки и установка темного фона во время обработки запроса
-//     document.getElementById("spinner").style.display = "block";
-//     document.body.classList.add('darkFon');
+// Установка обработчика клика на уровне документа для остановки запроса к GPT
+document.addEventListener('click', function(event) {
+    if (event.target && event.target.id === 'stopButton') {
+        stopRequests = true;
+    }
+});
 
-//     const spinnerLogsTime = document.querySelector('.spinnerLogsTime'); // Получение элемента для вывода времени
-//     const selectedText = document.getElementById('selected-text').value; // Получение выбранного текста
-//     const selectedCityString = document.getElementById('selected-city').value; // Получение строки с городами
-//     const systemMessage = document.getElementById('systemMessagePlagin').value; // Получение системного сообщения
-//     const charCountElement = document.getElementById('characters').value; // Получение количества символов
-//     const logsDiv = document.getElementById('systemLogs'); // Получение div для логов
-//     const logsList = document.querySelector('.logs-list'); // Получение списка логов
-
-//     const cityArray = selectedCityString.split('\n'); // Преобразование строки с городами в массив
-
-//     const startTime = new Date(); // Запись времени начала запроса
-
-//     // Запуск интервала для обновления времени, прошедшего с начала запроса
-//     const intervalId = setInterval(() => {
-//         const now = new Date(); // Текущее время
-//         const timeElapsed = now - startTime; // Время, прошедшее с начала запроса, в миллисекундах
-//         const minutes = Math.floor(timeElapsed / 60000); // Перевод миллисекунд в минуты
-//         const seconds = ((timeElapsed % 60000) / 1000).toFixed(0); // Получение оставшихся секунд
-//         const milliseconds = (timeElapsed % 1000).toFixed(0); // Получение миллисекунд
-//         spinnerLogsTime.textContent = `${minutes}:${seconds.padStart(2, '0')}.${milliseconds.padStart(3, '0')}`; // Обновление текста элемента
-//     }, 100);
-
-//     const MAX_RETRIES = 3; // максимальное количество попыток
-//     // Обход массива городов
-//     for (const [cityIndex, city] of cityArray.entries()) {
-//         let retries = 0; // счетчик текущих попыток
-    
-//         while (retries < MAX_RETRIES) {
-//             try {
-//                 // Отправка запроса на сервер с одним городом
-//                 const response = await Promise.race([
-//                     fetch('/apigptPlagin', {
-//                         method: 'POST',
-//                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-//                         body: new URLSearchParams({ selectedText, 'selectedCity': city.trim(), systemMessage, charCountElement, 'cityIndex': cityIndex }),
-//                     }),
-//                     timeout(120000) // Таймаут запроса - 2 минуты
-//                 ]);
-    
-//                 if (!response.ok) { // Если сервер вернул ошибку
-//                     console.error(`Ошибка с городом ${city}:`, response.status);
-//                     logsDiv.innerHTML += `Ошибка с городом ${city}: ${response.status}<br>`;
-//                     retries++; // увеличиваем счетчик попыток
-//                     continue;
-//                 }
-    
-//                 const data = await response.text(); // Получение текста ответа сервера
-//                 sendToGoServer(data); // Отправка данных на Go-сервер
-//                 break; // если успешно, выходим из цикла while
-//             } catch (error) {
-//                 // Вывод информации об ошибке в консоль и в div для логов
-//                 console.error(`Ошибка с городом ${city}:`, error);
-//                 logsDiv.innerHTML += `Ошибка с городом ${city}: ${error}<br>`;
-//                 retries++; // увеличиваем счетчик попыток
-//             }
-    
-//             // Если достигнуто максимальное количество попыток, прекращаем попытки
-//             if (retries == MAX_RETRIES) {
-//                 logsDiv.innerHTML += `Превышено максимальное количество попыток для города ${city}.<br>`;
-//             }
-    
-//             // Задержка в 1 секунду перед следующей попыткой или перед следующим городом
-//             await new Promise(resolve => setTimeout(resolve, 1000));
-//         }
-//     }
-
-//     clearInterval(intervalId); // Остановка таймера
-
-//     // Вычисление и вывод общего времени обработки запроса
-//     const endTime = new Date();
-//     const elapsedTime = endTime - startTime; // Это даст вам время в миллисекундах
-//     const minutes = Math.floor(elapsedTime / 60000); // Количество минут
-//     const seconds = ((elapsedTime % 60000) / 1000).toFixed(0); // Оставшиеся секунды
-//     const milliseconds = (elapsedTime % 1000).toFixed(0); // Оставшиеся миллисекунды
-    
-//     logsDiv.innerHTML += `<p class='TotalRequestProcessingTime'>Общее время обработки запроса: ${minutes} минут, ${seconds.padStart(2, '0')} секунд, ${milliseconds.padStart(3, '0')} миллисекунд.</p>`;
-    
-
-//     logsList.scrollTop = logsList.scrollHeight; // Автоматическая прокрутка списка логов вниз
-
-//     // Завершение обработки запроса: скрытие индикатора загрузки, возвращение нормального фона
-//     showPagesInPageBlockPlagin();
-//     document.getElementById("spinner").style.display = "none";
-//     document.body.classList.remove('darkFon');
-// }
 async function queryToGPT() {
     sendNewRequest(); // Инициализация нового запроса
 
@@ -343,6 +259,10 @@ async function queryToGPT() {
             lineCity = 1;
         }
         for (const [_, text] of textArray.entries()) {
+            if (stopRequests) {
+                logsDiv.innerHTML += "Остановлено пользователем обработку текстов для текущего города.<br>";
+                break; // Прекратите обработку текстов для текущего города
+            }
             let retries = 0;
 
             while (retries < MAX_RETRIES) {
@@ -366,6 +286,7 @@ async function queryToGPT() {
 
                     const data = await response.text();
                     sendToGoServer(data);
+                    console.log(data);
                     break;
 
                 } catch (error) {
@@ -380,6 +301,11 @@ async function queryToGPT() {
 
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
+        }
+        if (stopRequests) {
+            logsDiv.innerHTML += "Остановлено пользователем обработку остальных городов.<br>";
+            stopRequests = false;
+            break; // Прекратите обработку остальных городов
         }
     }
 
@@ -425,8 +351,8 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
-    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
-    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
+    window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
+    // window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
 
 
 
