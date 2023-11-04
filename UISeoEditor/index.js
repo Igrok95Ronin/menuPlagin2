@@ -27,9 +27,9 @@ document.addEventListener("click", function (e) {
     }
 });
 
-// активация при нажатии на кнопку M
-document.addEventListener('keydown', function (e) {
-    if (e.code === 'KeyM') {
+// активация при нажатии на кнопки Shift + Alt + M
+document.addEventListener('keyup', function (e) {
+    if (e.shiftKey === true && e.altKey === true && e.code === 'KeyM') {
         const rightMenu = document.querySelector('.jquery-right-menu');
         const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu');
         // Переключение для .jquery-right-menu
@@ -40,6 +40,8 @@ document.addEventListener('keydown', function (e) {
             modul.showPagesInPageBlockPlagin();
             modul.numberOfCities();
             modul.deleteAllPage();
+            modul.addLangSite();
+            modul.updateWhenPrinting();
             document.querySelectorAll('.editable').forEach(addCheckbox);
 
             // Проверка наличия systemLogs и инициализация WebSocket, если еще не инициализировано
@@ -102,33 +104,23 @@ function addCheckbox(element) {
 
     // Проверяет, что элемент не является частью определенных меню и не содержит чекбокс.
     if (!element.closest('.jquery-right-menu') && !element.closest('.jquery-center-menu') && !element.querySelector('.custom-checkbox')) {
-        let allText = '';
-        // Собирает текст из дочерних узлов элемента.
-        for (let node of element.childNodes) {
-            if (node.nodeType === 3) { // TEXT_NODE
-                allText += node.nodeValue.trim();
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'custom-checkbox';
+        checkbox.name = checkboxName; 
+        element.insertAdjacentElement('afterbegin', checkbox);
+
+        // Добавляет обработчик события, который обновляет список выбранных чекбоксов и счетчик символов при изменении состояния чекбокса.
+        checkbox.addEventListener('change', function () {
+            if (this.checked && !checkboxesOrder.includes(this.name)) {
+                checkboxesOrder.push(this.name);
+            } else {
+                checkboxesOrder = checkboxesOrder.filter(name => name !== this.name);
             }
-        }
-
-        // Добавляет чекбокс, если длина текста больше 10 символов.
-        if (allText && allText.length > 1) {
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'custom-checkbox';
-            checkbox.name = checkboxName; 
-            element.insertAdjacentElement('afterbegin', checkbox);
-
-            // Добавляет обработчик события, который обновляет список выбранных чекбоксов и счетчик символов при изменении состояния чекбокса.
-            checkbox.addEventListener('change', function () {
-                if (this.checked && !checkboxesOrder.includes(this.name)) {
-                    checkboxesOrder.push(this.name);
-                } else {
-                    checkboxesOrder = checkboxesOrder.filter(name => name !== this.name);
-                }
-                updateSelectedCheckboxes();
-                modul.updateCharacterCount();
-            });    
-        }
+            updateSelectedCheckboxes();
+            modul.updateCharacterCount();
+            updateSystemMessage(); // Обновляет длину символов в Системном сообщении для GPT
+        });    
     }
 }
 
@@ -137,6 +129,23 @@ function removeCheckboxes() {
     document.querySelectorAll('.custom-checkbox').forEach(function (checkbox) {
         checkbox.remove();
     });
+}
+
+// Обновляет длину символов в Системном сообщении для GPT
+function updateSystemMessage() {
+    let textarea = document.getElementById('systemMessagePlagin');
+
+    if (textarea) {
+        let currentContent = textarea.value;
+
+        // Формирование новой строки с обновленной длиной символов
+        let updatedLengthString = `${modul.updateCharacterCount()}-${modul.updateCharacterCount() + 10}`;
+
+        // Замена старой строки с длиной символов на новую
+        let newContent = currentContent.replace(/\d+-\d+/, updatedLengthString);
+
+        textarea.value = newContent;
+    }
 }
 
 // свернуть развернуть меню при нажатии на кнопку
@@ -221,6 +230,7 @@ document.addEventListener('click', function(event) {
 
 async function queryToGPT() {
     sendNewRequest(); // Инициализация нового запроса
+    const checkedCheckboxes = getCheckedCheckboxes();  // Получение массива отмеченных чекбоксов
 
     // Отображение индикатора загрузки и установка темного фона во время обработки запроса
     document.getElementById("spinner").style.display = "block";
@@ -258,7 +268,8 @@ async function queryToGPT() {
         if(lineCity >= textIndex){ // если индекс строки больше или равно общему количеству строк то присваиваем 1
             lineCity = 1;
         }
-        for (const [_, text] of textArray.entries()) {
+        for (const [i, text] of textArray.entries()) {
+            let currentLineCheckbox = checkedCheckboxes[i]// Перебираем все полученные чекбоксы
             if (stopRequests) {
                 logsDiv.innerHTML += "Остановлено пользователем обработку текстов для текущего города.<br>";
                 break; // Прекратите обработку текстов для текущего города
@@ -285,7 +296,7 @@ async function queryToGPT() {
                     }
 
                     const data = await response.text();
-                    sendToGoServer(data);
+                    sendToGoServer(data,currentLineCheckbox);// Передаем ответ GPT и чекбокc строки
                     console.log(data);
                     break;
 
@@ -326,8 +337,6 @@ async function queryToGPT() {
     document.body.classList.remove('darkFon');
 }
 
-
-
 window.isNewRequest = false; // глобальная переменная для отслеживания нового запроса
 // Функция для создания Вебсокит соединения
 function initiateWebSocket() {
@@ -351,8 +360,8 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
-    window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
-    // window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
+    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
+    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
 
 
 
@@ -401,16 +410,17 @@ function sendNewRequest() {
     }
 }
 
-
 //Количество отмеченных символов
 function updateCharacterCount() {
     const selectedTextElement = document.getElementById('selected-text');
     const charCountElement = document.getElementById('characters');
     const currentCharCount = selectedTextElement.value.length;
     charCountElement.value = currentCharCount;
+    return currentCharCount
 }
 
 // Получаем текущий url
+    var baseUrl = window.location.origin; // Начальный домен, например "https://example.com"
     var url = window.location.href;  // Получаем текущий URL
     var parts = url.split("/")
     var index = parts.indexOf('sites');
@@ -418,6 +428,44 @@ function updateCharacterCount() {
         var region = parts[index + 1];
         var service = parts[index + 2]
     }
+
+// Добавить язык сайта в форму
+function addLangSite() {
+   // Получаем элемент textarea по его ID
+let textarea = document.getElementById('systemMessagePlagin');
+
+// Получаем текущий текст из textarea
+let text = textarea.value;
+
+const languageMapping = {
+    "at": "НЕМЕЦКОМ",
+    "be": "НИДЕРЛАНДСКОМ",
+    "cz": "ЧЕШКОМ",
+    "fr": "ФРАНЦУЗСКОМ",
+    "gb": "АНГЛИЙСКОМ",
+    "hu": "ВЕНГЕРСКОМ",
+    "no": "НОРВЕЖСКОМ",
+    "pl": "ПОЛЬСКОМ",
+    "ru": "РУССКОМ"
+};
+
+let siteLanguage = languageMapping[region] || "Неизвестный язык";
+
+// Заменяем "lang" на нужное значение языка
+text = text.replace(/lang/g, siteLanguage);
+
+// Устанавливаем обновленный текст обратно в textarea
+textarea.value = text; 
+}
+
+// Обновляем количество символов при воде в форму
+function updateWhenPrinting(){
+    const selectedText = document.querySelector('#selected-text')
+    selectedText.addEventListener('input', () => {
+        updateCharacterCount()
+        updateSystemMessage()// Обновляет длину символов в Системном сообщении для GPT
+    })
+}
 
 // Функция showPagesInPageBlockPlagin вызывается для отправки запроса на сервер и получения данных о страницах
 function showPagesInPageBlockPlagin() {
@@ -447,13 +495,17 @@ function showPagesInPageBlockPlagin() {
                 const pages_list_item = document.querySelector('.pages_list_item');
                 const total_pages = document.querySelector('.total_pages');
                 const btnDeleteAllPages = document.querySelector('.deleteAllPages');
+                const styleSitemap = document.querySelector('.styleSitemap');
+
                 total_pages.textContent = data.total_files;
 
                 // Показывать или скрывать кнопку Удалить все
                 if(+total_pages.textContent > 0){
                     btnDeleteAllPages.style.display = "block"
+                    styleSitemap.style.display = 'inline-block';
                 } else {
                     btnDeleteAllPages.style.display = "none"
+                    styleSitemap.style.display = 'none';
                 }
 
                 pages_list_item.innerHTML = '';
@@ -479,8 +531,10 @@ function showPagesInPageBlockPlagin() {
 
 // Удалить одну страницу
 function deletePage(region, service) {
-    const deleteBtn = document.querySelectorAll('.deletePage');
-    const btnDeleteAllPages = document.querySelector('.deleteAllPages');
+    const deleteBtn = document.querySelectorAll('.deletePage'),
+          btnDeleteAllPages = document.querySelector('.deleteAllPages'),
+          styleSitemap = document.querySelector('.styleSitemap');// Карта сайта
+
     deleteBtn.forEach(deleteP => {
         deleteP.addEventListener('click', function() {
             const link = this.getAttribute('data-link');
@@ -493,8 +547,10 @@ function deletePage(region, service) {
             // Показывать или скрывать кнопку Удалить все
             if(total_pages > 0){
                 btnDeleteAllPages.style.display = "block"
+
             } else {
                 btnDeleteAllPages.style.display = "none"
+                styleSitemap.style.display = "none"
             }
 
             // Поиск ближайшего родительского элемента с классом 'pageWrapper' и изменение его стиля
@@ -531,11 +587,13 @@ function deletePage(region, service) {
 
 // Удалить все страницы
 function deleteAllPage() {
-    const btnDeleteAllPages = document.querySelector('.deleteAllPages');
+    const btnDeleteAllPages = document.querySelector('.deleteAllPages'),
+          styleSitemap = document.querySelector('.styleSitemap');// Карта сайта
     btnDeleteAllPages.addEventListener('click', function() {
         // Обнуляем счетчик количества страниц, список городов и саму кнопку
         document.querySelector('.total_pages').textContent = "";
         document.querySelector('.pages_list_item').innerHTML = "";
+        styleSitemap.style.display = 'none';
         btnDeleteAllPages.style.display = 'none';
 
         // Создаем объект для хранения параметров запроса
@@ -566,11 +624,11 @@ function deleteAllPage() {
 }
 
 // Функция отправки текста на сервер Go для создания LadingPage
-async function sendToGoServer(text) {
-    const checkedCheckboxes = getCheckedCheckboxes();  // Получение массива отмеченных чекбоксов
+async function sendToGoServer(text,currentLineCheckbox) {
     const data = new URLSearchParams();
     data.append('text', text);
-    data.append('checked', checkedCheckboxes.join(','));
+    data.append('checked', currentLineCheckbox);// Тут получает чекбокс отмеченой строки
+    data.append('baseUrl', baseUrl);
     data.append('region', region);
     data.append('service', service);
     try {
@@ -640,6 +698,8 @@ window.modul = {
     numberOfCities,
     initiateWebSocket,
     deleteAllPage,
+    addLangSite,
+    updateWhenPrinting,
 }
 
 })()
