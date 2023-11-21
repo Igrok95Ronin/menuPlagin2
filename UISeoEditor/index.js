@@ -27,9 +27,9 @@ document.addEventListener("click", function (e) {
     }
 });
 
-// активация при нажатии на кнопки Shift + Alt + M
+// активация при нажатии на кнопки Ctrl + Shift + Z
 document.addEventListener('keyup', function (e) {
-    if (e.shiftKey === true && e.altKey === true && e.code === 'KeyM') {
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyZ') {
         const rightMenu = document.querySelector('.jquery-right-menu');
         const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu');
         // Переключение для .jquery-right-menu
