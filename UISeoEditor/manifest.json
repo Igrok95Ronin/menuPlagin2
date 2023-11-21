@@ -4,7 +4,8 @@
   "version": "1.0",
   "host_permissions": [
     "http://localhost:8080/*",
-    "https://nubify.ru/*"
+    "https://nubify.ru/*",
+    "https://axejs.org/*"
   ],
   "permissions": [
     "tabs"
