@@ -22,18 +22,25 @@ document.addEventListener("click", function (e) {
     }
 
     if (e.target.closest('#submit-buttonPlagin')) {
-        const menu = document.querySelector('.jquery-logs-menu');
+        const menu = document.querySelector('.jquery-logs-menu, .wrapperListOfAltTags');
         menu.classList.add('active'); //не скрывать форму при повторном нажатии
     }
 });
 
 // активация при нажатии на кнопки Ctrl + Shift + Z
 document.addEventListener('keyup', function (e) {
-    if (e.ctrlKey && e.shiftKey && e.code === 'KeyZ') {
+    if (e.ctrlKey && e.code === 'KeyZ') {
         const rightMenu = document.querySelector('.jquery-right-menu');
-        const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu');
+        const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags');
+
+        if(!rightMenu){
+            return
+        }
+
         // Переключение для .jquery-right-menu
         rightMenu.classList.toggle('active');
+       
+        modul.showIgmAltField(); // Показать поле ImgAlt
 
         if (rightMenu.classList.contains('active')) {
             // Если jquery-right-menu активен, то выполняем ваш код
@@ -43,6 +50,7 @@ document.addEventListener('keyup', function (e) {
             modul.addLangSite();
             modul.updateWhenPrinting();
             document.querySelectorAll('.editable').forEach(addCheckbox);
+
 
             // Проверка наличия systemLogs и инициализация WebSocket, если еще не инициализировано
             const logsTextarea = document.getElementById('systemLogs');
@@ -163,8 +171,6 @@ document.addEventListener("click", function (e) {
         // Ищем следующий элемент на том же уровне
         const menu = parentDiv ? parentDiv.nextElementSibling : null;
 
-        console.log(menu)
-
         if (menu) {
             menu.classList.toggle('active');
         }
@@ -179,7 +185,7 @@ let offsetY = 0;
 
 document.addEventListener('mousedown', (e) => {
     if (e.target.classList.contains('headeR')) {
-        draggedElement = e.target.closest('.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu');
+        draggedElement = e.target.closest('.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags');
         const rect = draggedElement.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
@@ -231,13 +237,14 @@ document.addEventListener('click', function(event) {
 async function queryToGPT() {
     sendNewRequest(); // Инициализация нового запроса
     const checkedCheckboxes = getCheckedCheckboxes();  // Получение массива отмеченных чекбоксов
-
+    
     // Отображение индикатора загрузки и установка темного фона во время обработки запроса
     document.getElementById("spinner").style.display = "block";
     document.body.classList.add('darkFon');
 
     const spinnerLogsTime = document.querySelector('.spinnerLogsTime'); // Получение элемента для вывода времени
     const selectedText = document.getElementById('selected-text').value; // Получение выбранного текста
+    const prefixForUrl = document.getElementById('prefixForUrl').value; // Получение значения из поля keyForUrl
     const selectedCityString = document.getElementById('selected-city').value; // Получение строки с городами
     const systemMessage = document.getElementById('systemMessagePlagin').value; // Получение системного сообщения
     const charCountElement = document.getElementById('characters').value; // Получение количества символов
@@ -246,7 +253,7 @@ async function queryToGPT() {
 
     const cityArray = selectedCityString.split('\n'); // Преобразование строки с городами в массив
     const textArray = selectedText.split(']').map(str => str.replace('[', '').trim()).filter(Boolean); // Разбиваем текст на строки
-    
+
     const startTime = new Date(); // Запись времени начала запроса
 
     // Запуск интервала для обновления времени, прошедшего с начала запроса
@@ -283,7 +290,12 @@ async function queryToGPT() {
                         fetch('/apigptPlagin', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: new URLSearchParams({ 'selectedText': text, 'selectedCity': city.trim(), systemMessage, charCountElement, 'cityIndex': cityIndex, 'textIndex': lineCity++, 'totalNumberOfLines' : textIndex }),
+                            body: new URLSearchParams({
+                                 'selectedText': text, 
+                                 'selectedCity': city.trim(), systemMessage, charCountElement, 'cityIndex': cityIndex, 
+                                 'textIndex': lineCity++, 
+                                 'totalNumberOfLines' : textIndex,
+                                 'btnFilterBoolArr': btnFilterBoolArr }),
                         }),
                         timeout(120000)
                     ]);
@@ -296,7 +308,7 @@ async function queryToGPT() {
                     }
 
                     const data = await response.text();
-                    sendToGoServer(data,currentLineCheckbox);// Передаем ответ GPT и чекбокc строки
+                    sendToGoServer(data,currentLineCheckbox,prefixForUrl);// Передаем ответ GPT и чекбокc строки
                     console.log(data);
                     break;
 
@@ -360,8 +372,8 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
-    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`);
-    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`);
+    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`); //lock
+    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
 
 
 
@@ -590,47 +602,57 @@ function deleteAllPage() {
     const btnDeleteAllPages = document.querySelector('.deleteAllPages'),
           styleSitemap = document.querySelector('.styleSitemap');// Карта сайта
     btnDeleteAllPages.addEventListener('click', function() {
-        // Обнуляем счетчик количества страниц, список городов и саму кнопку
-        document.querySelector('.total_pages').textContent = "";
-        document.querySelector('.pages_list_item').innerHTML = "";
-        styleSitemap.style.display = 'none';
-        btnDeleteAllPages.style.display = 'none';
 
-        // Создаем объект для хранения параметров запроса
-        var data = new URLSearchParams();
-        // Добавляем параметры region, service и link к запросу
-        data.append('region', region);
-        data.append('service', service);
-        
-        // Выполняем запрос к серверу с использованием fetch и методом POST
-        fetch('/deleteAllPagesPlagin', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: data.toString()
-        })
-        // Обрабатываем полученные данные
-        .then(response => response.json())
-        .then(data => {
-            // Добавьте здесь ваш код для обработки ответа, если необходимо.
-        })
-        // В случае возникновения ошибки выводим ее в консоль
-        .catch(error => {
-            console.error('Ошибка:', error);
-        });
+        // Подтверждение на удаление
+        if(confirm("Вы хотите удалить все страницы?")){
+            // Обнуляем счетчик количества страниц, список городов и саму кнопку
+            document.querySelector('.total_pages').textContent = "";
+            document.querySelector('.pages_list_item').innerHTML = "";
+            styleSitemap.style.display = 'none';
+            btnDeleteAllPages.style.display = 'none';
+
+            // Создаем объект для хранения параметров запроса
+            var data = new URLSearchParams();
+            // Добавляем параметры region, service и link к запросу
+            data.append('region', region);
+            data.append('service', service);
+            
+            // Выполняем запрос к серверу с использованием fetch и методом POST
+            fetch('/deleteAllPagesPlagin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: data.toString()
+            })
+            // Обрабатываем полученные данные
+            .then(response => response.json())
+            .then(data => {
+                // Добавьте здесь ваш код для обработки ответа, если необходимо.
+            })
+            // В случае возникновения ошибки выводим ее в консоль
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+        }
+
     });
 
 }
 
 // Функция отправки текста на сервер Go для создания LadingPage
-async function sendToGoServer(text,currentLineCheckbox) {
+async function sendToGoServer(text,currentLineCheckbox,prefixForUrl) {
+    const objectWithImgAndInputValues = createsAnObjectWithPicturesAndInputValue();//объект со значениями имг и инпута
+    const objectJson = JSON.stringify(objectWithImgAndInputValues); // Переобразуем в json для отправки на сервер
+
     const data = new URLSearchParams();
     data.append('text', text);
     data.append('checked', currentLineCheckbox);// Тут получает чекбокс отмеченой строки
     data.append('baseUrl', baseUrl);
     data.append('region', region);
     data.append('service', service);
+    data.append('prefixForUrl', prefixForUrl);
+    data.append('imgInputPairs', objectJson); // Добавление объекта как строки JSON
     try {
         const response = await fetch('/CreateLandingPagePlagin', {
             method: 'POST',
@@ -689,6 +711,107 @@ function numberOfCities() {
     updateNumberOfCities();
 }
 
+// Функция для поля IgmAlt
+function showIgmAltField() {
+    const btnAddImgAlt = document.querySelector('#btnAddImgAlt'),
+        wrapperListOfAltTags = document.querySelector('.wrapperListOfAltTags');
+    
+    if(btnAddImgAlt){
+        btnAddImgAlt.addEventListener('click', function() {
+            
+            const imgsAlt = document.querySelectorAll('img[alt]'),
+                listOfAltTags = document.querySelector('.listOfAltTags'),
+                numberOfImages = document.querySelector('.numberOfImages');
+
+            if(numberOfImages.textContent == ""){
+                numberOfImages.textContent = imgsAlt.length;
+                imgsAlt.forEach(img => {
+
+                    const div = document.createElement('div'); // Создаем див
+                    div.classList.add('imgOfAltTagWrapper'); // добавляем класс
+    
+                    const inp = document.createElement('input'); // Создаем инпут
+                    inp.classList.add('inpOfAltTag'); // добавляем класс
+                    inp.type = 'text'; // тип
+                    inp.name = 'inpOfAltTagName'; // имя
+                    inp.value = img.alt // добавляем в инпут значение img alt
+    
+                    const imgCopy = img.cloneNode(true) // создаем копии изображений
+                    imgCopy.classList.add('imgOfAltTag'); // получаем каждую картинку
+    
+                    div.appendChild(imgCopy); // вставляем его img в созданный див
+                    div.appendChild(inp) // всталяем его inp в созданный див 
+    
+                    listOfAltTags.appendChild(div); // див вставляем в основную обертку
+                })
+
+            }
+
+
+            wrapperListOfAltTags.classList.toggle('active') // показать форму
+        })
+    }
+
+}
+
+// Функция для поля IgmAlt
+function createsAnObjectWithPicturesAndInputValue() {
+    let imgInputPairs = {} // Создаем пустой объект
+    // Находим все div, содержащие изображения и поля ввода
+    let listOfAltTagsDivs = document.querySelectorAll('.imgOfAltTagWrapper');
+
+    listOfAltTagsDivs.forEach(div => {
+        // Находим изображение и поле ввода внутри каждого div
+        let img = div.querySelector('img'),
+        input = div.querySelector('input');
+        
+        img = `../assets/img/${img.src.split('/').pop()}` // обрезаем src img
+
+        // Добавляем пару в объект или Map
+        // Используем src изображения как ключ, и значение input как значение
+        if(input.value != "") {
+            imgInputPairs[img] = input.value;
+        }
+    })
+
+    // Если в объект пуст возврашаем null
+    if(Object.keys(imgInputPairs).length === 0){
+        return null
+    }
+    return imgInputPairs;
+
+}
+
+// Обработчик для кнопок фильтрации
+
+document.body.addEventListener('click', function() {
+    document.querySelectorAll('.exclusionButtons').forEach(button => {
+        button.addEventListener('click', handlerForFilterButtons);
+    });
+})
+
+let btnFilterBoolArr = [true,true,true]
+
+function handlerForFilterButtons(e) {
+    const btnQuotes = document.querySelector('#btnQuotes'),
+    btnColon = document.querySelector('#btnColon'),
+    btnHyphen = document.querySelector('#btnHyphen');
+
+    
+    
+    if(e.target.classList.contains('exclusionButtons')){
+        e.target.classList.toggle("activeBtn");
+
+        btnFilterBoolArr[0] = btnQuotes.classList.contains('activeBtn');
+        btnFilterBoolArr[1] = btnColon.classList.contains('activeBtn');
+        btnFilterBoolArr[2] = btnHyphen.classList.contains('activeBtn');
+
+    }
+
+    return btnFilterBoolArr
+}
+
+
 
 //----Модули
 window.modul = {
@@ -700,6 +823,9 @@ window.modul = {
     deleteAllPage,
     addLangSite,
     updateWhenPrinting,
+    showIgmAltField,
+    createsAnObjectWithPicturesAndInputValue,
+    handlerForFilterButtons, // Обработчик для кнопок фильтрации
 }
 
 })()

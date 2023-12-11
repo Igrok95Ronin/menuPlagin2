@@ -23,7 +23,10 @@
     <div class="jquery-menu">
         <div class="flex-container">
             <div class="wraper">
-                <textarea id="selected-text" name="selectedText" class="selected_checkboxes"></textarea><!-- Выделенные поля -->
+                <div class="innerTextareaInput">
+                    <textarea id="selected-text" name="selectedText" class="selected_checkboxes"></textarea><!-- Выделенные поля -->
+                    <input id="prefixForUrl" type="text" name="prefixForUrl" placeholder="Префикс для Url"><!-- Ключ для url -->
+                </div>
                 <div class="cities_list">
                     <textarea id="selected-city" placeholder="Список городов..."  name="selectedCity">
 Moscow
@@ -31,17 +34,33 @@ Grozny
 Sochi
                     </textarea>
                     <input id="characters" type="text" name="characters" value="0" placeholder="Количество символов" required="">
+
+                    <!-- Кнопки фильтри -->
+                    <div class="exclusionButtonsWrapper">
+                        <button id="btnQuotes" class="exclusionButtons activeBtn">"</button>
+                        <button id="btnColon" class="exclusionButtons activeBtn">:</button>
+                        <button id="btnHyphen" class="exclusionButtons activeBtn">-</button>
+                    </div>
+
                     <button id="submit-buttonPlagin">ОТПРАВИТЬ</button>
                 </div>
             </div>
+
+            <!-- Кнопки панели меню -->
+            <div class="WrapperBtn">
+                <button id="btnAddImgAlt" class="menuBtn">ImgAlt</button>
+                <button id="btnAddStrong" class="menuBtn">Strong</button>
+            </div>
+            
             <textarea id="systemMessagePlagin" name="
             Plagin">
 Основные требования:
+
 - длина не более 0-10 символов
 - Тексты для адаптации исключительно на lang языке.
-- Для каждого города создайте уникальную и смысловую адаптацию каждого из указанных выше текстов.
-- Стремитесь сделать каждую адаптацию уникальной для каждого города, сохраняя при этом первоначальный смысл исходного текста.
-- Все тексты должны быть только на lang языке.
+- Сгенерируй мне уникальный заголовок, сохраняя при этом первоначальный смысл исходного заголовока.
+- Вот это слово ! должно быть обязательно в заголовке, можно склонять.
+- Все заголовки должны быть только на lang языке.
 
 Пожалуйста, строго следуйте этим требованиям.
             </textarea>
@@ -55,6 +74,16 @@ Sochi
     </div>
     <div class="jquery-menu">
         <div class="logs-list"><div id="systemLogs" placeholder="Логи" readonly></div></div>
+    </div>
+</div>
+
+<!-- Поле для ImgAlt -->
+<div class="wrapperListOfAltTags">
+    <div class="headeR">
+        ImgAlt <span class="numberOfImages"><!-- Количество картинок --></span><div id="hide_menu">–</div>
+    </div>
+    <div class="jquery-menu">
+        <div class="listOfAltTags"></div><!-- Сюда добавляются изображения и инпут -->
     </div>
 </div>
 
@@ -148,7 +177,7 @@ Sochi
         padding: 5px;
     }
 
-    .headeR {
+    .headeR{
         background: #666;
         padding: 2px;
         font-weight: 600;
@@ -159,7 +188,8 @@ Sochi
 
     .jquery-right-menu,
     .jquery-logs-menu,
-    .jquery-center-menu {
+    .jquery-center-menu,
+    .wrapperListOfAltTags {
         background-color: #fff;
         display: none;
         border: 1px solid #ccc;
@@ -176,7 +206,8 @@ Sochi
         right: 5px;
     }
 
-    .jquery-logs-menu {
+    .jquery-logs-menu,
+    .wrapperListOfAltTags {
         width: 805px;
         top: calc(var(--center-menu-height) + 31px);
         right: 15px;
@@ -192,7 +223,8 @@ Sochi
 
     .jquery-right-menu.active,
     .jquery-logs-menu.active,
-    .jquery-center-menu.active {
+    .jquery-center-menu.active,
+    .wrapperListOfAltTags.active {
         display: block;
     }
 
@@ -218,20 +250,42 @@ Sochi
 
     }
 
+    #prefixForUrl{
+        color: #159c20;
+        width: 100%;
+        padding: 0 10px;
+        font-weight: 700;
+        font-size: 14px;
+        height: 30px;
+    }
+
+    .innerTextareaInput{
+        width: 100%;
+        display: flex;
+        padding: 0 5px;
+        flex-direction: column;
+    }
+
     .selected_checkboxes {
-        width: 70%;
+        width: 100%;
+        height: 85.4%;
+        margin: 5px 0;
         overflow-y: auto;
         max-height: calc(var(--center-menu-height) - 15px)
     }
 
+    #characters{
+        margin: 5px 0 0;
+        width: 100%;
+    }
+
     .cities_list {
-        width: 30%;
+        width: 35%;
     }
 
     .cities_list textarea {
         width: 100%;
         height: calc(var(--center-menu-height) - 65px);
-        border: none;
         resize: none;
         padding: 5px;
         font-size: 14px;
@@ -270,6 +324,7 @@ Sochi
 .wraper {
     display: flex;
     width: 100%;
+    justify-content: space-between;
 }
 #systemMessagePlagin {
     height: 240px;
@@ -455,4 +510,95 @@ Sochi
 #stopButton:hover {
     background: rgb(114, 2, 2);
 }
+
+/* Кнопки панели меню */
+.WrapperBtn {
+    border: 2px solid #66666657;
+    border-radius: 2px;
+    padding: 5px;
+    margin: 0 5px 5px;
+}
+.menuBtn {
+    border: none;
+    border-radius: 2px;
+    font-weight: 700;
+    background: tomato;
+    color: #fff;
+    padding: 3px 6px;
+    transition: .3s;
+}
+.menuBtn:hover {
+    background: #198754;
+}
+
+/* Форма для кнопок ImgAlt */
+.wrapperListOfAltTags {
+    width: 586px;
+    /* top: calc(var(--center-menu-height) + 80px); */
+    top: 3px;
+
+    right: calc(50% - (586px/4.5));
+    z-index: 999;
+}
+.total_pages {
+}
+.listOfAltTags {
+    background: aliceblue;
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 588px;
+    overflow: auto;
+}
+.imgOfAltTagWrapper {
+    border: 2px solid #cbcbcb;
+    border-radius: 3px;
+    padding: 5px;
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+.imgOfAltTag {
+    max-width: 200px;
+    max-height: 200px;
+    width: 100%;
+    height: 100%;
+}
+.inpOfAltTag {
+    width: 100%;
+    height: 35px;
+    padding: 0 5px;
+    border-radius: 3px;
+    border: 2px solid #cbcbcb;
+}
+
+/* Кнопки фильтри */
+.exclusionButtonsWrapper{
+    padding: 5px;
+    display: flex;
+    justify-content: space-evenly;
+    gap: 10px;
+}
+.exclusionButtons{
+    border: none;
+    border-radius: 2px;
+    font-weight: 700;
+    background: tomato;
+    color: #fff;
+    padding: 3px 6px;
+    transition: .3s;
+    width: 22px;
+}
+.exclusionButtons:hover {
+        cursor: pointer;
+        background-color: rgb(232, 84, 58);
+} 
+.activeBtn {
+    background-color: #159c20;
+}
+
+
 </style>
