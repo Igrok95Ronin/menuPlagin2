@@ -50,6 +50,7 @@ document.addEventListener('keyup', function (e) {
             modul.addLangSite();
             modul.updateWhenPrinting();
             document.querySelectorAll('.editable').forEach(addCheckbox);
+            modul.searchPages();
 
 
             // Проверка наличия systemLogs и инициализация WebSocket, если еще не инициализировано
@@ -372,8 +373,8 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
-    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`); //lock
-    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
+    window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`); //lock
+    // window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
 
 
 
@@ -811,6 +812,52 @@ function handlerForFilterButtons(e) {
     return btnFilterBoolArr
 }
 
+// Поиск страниц
+function searchPages() {
+    // Установка обработчика событий на ввод в поле поиска
+    const searchPages = document.querySelector('.searchPages');
+    if(searchPages){
+        searchPages.oninput = function (){
+            // Получение введенного значения и выборка всех элементов ссылок в таблице
+            let val = this.value.trim().toUpperCase(),
+                allPages = document.querySelectorAll('.pages_list .pages_list_item .pageWrapper a'),
+                found = false; // Переменная для отслеживания наличия совпадений
+
+            // Проверка, не пуст ли введенный запрос
+            if(val !== ''){
+                // Перебор всех элементов ссылок
+                allPages.forEach(function(elem) {
+                    let row = elem.closest('.pageWrapper'); // Находим ближайший родительский элемент 'tr' для ссылки
+                    // Проверка, соответствует ли текст ссылки запросу
+                    if(elem.innerText.search(val) === -1){
+                        row.classList.add('hide'); // Скрываем строку, если нет совпадения
+                    }
+                    else {
+                        found = true; // Устанавливаем флаг в true, если найдено совпадение
+                        row.classList.remove('hide'); // Показываем строку, если есть совпадение
+                        let str = elem.innerText;
+                        // Вызываем функцию для выделения найденного текста
+                        elem.innerHTML = insertMark(str, elem.innerText.search(val), val.length);
+                    }
+                });
+            }
+            else {
+                // Если запрос пуст, показываем все строки и сбрасываем изменения в тексте ссылок
+                allPages.forEach(function(elem) {
+                    let row = elem.closest('.pageWrapper');
+                    row.classList.remove('hide');
+                    elem.innerHTML = elem.innerText;
+                });
+            }
+        }
+    }
+}
+
+// Вспомогательная функция для формы поиска страниц подсвечивает буквы
+function insertMark(string,pos,len){
+    return string.slice(0,pos) + '<mark>' + string.slice(pos, pos + len) + '</mark>' + string.slice(pos + len);
+}
+
 
 
 //----Модули
@@ -826,6 +873,7 @@ window.modul = {
     showIgmAltField,
     createsAnObjectWithPicturesAndInputValue,
     handlerForFilterButtons, // Обработчик для кнопок фильтрации
+    searchPages, // Поиск страниц
 }
 
 })()

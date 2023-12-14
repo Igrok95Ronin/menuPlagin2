@@ -13,6 +13,10 @@
         <div class="pages_list">
             <div class="pages_list_item"><!-- Список страниц --></div>
         </div>
+        <!-- Поиск страниц -->
+        <div class="searchPagesWrapper">
+            <input class="searchPages" type="search" name="searchPages" placeholder="Поиск страниц...">
+        </div>
         <button class="deleteAllPages">Удалить все</button>
     </div>
 </div>
@@ -58,7 +62,7 @@ Sochi
 
 - длина не более 0-10 символов
 - Тексты для адаптации исключительно на lang языке.
-- Сгенерируй мне уникальный заголовок, сохраняя при этом первоначальный смысл исходного заголовока.
+- Сгенерируй мне уникальный заголовок, сохраняя при этом первоначальный смысл исходного заголовка.
 - Вот это слово ! должно быть обязательно в заголовке, можно склонять.
 - Все заголовки должны быть только на lang языке.
 
@@ -144,6 +148,25 @@ Sochi
         height: calc(var(--center-menu-height) - 51px);
     }
 
+    /* Стилизация всего скроллбара */
+    ::-webkit-scrollbar {
+    width: 5px; /* ширина для вертикального скроллбара */
+    height: 5px; /* высота для горизонтального скроллбара */
+    }
+    /* Стилизация дорожки (трека) скроллбара */
+    ::-webkit-scrollbar-track {
+    background: #f1f1f1; /* цвет фона */
+    }
+    /* Стилизация ручки скроллбара */
+    ::-webkit-scrollbar-thumb {
+    background: #888; /* цвет ручки */
+    border-radius: 5px; /* скругление углов */
+    }
+    /* Изменение цвета ручки скроллбара при наведении */
+    ::-webkit-scrollbar-thumb:hover {
+    background: #555; /* темнее при наведении */
+    }
+
     .pages_list_item a {
         display: block;
         text-decoration: none;
@@ -153,6 +176,9 @@ Sochi
         padding: 3px;
     }
 
+    .pages_list_item {
+        padding: 5px;
+    }
     .pages_list_item a::before {
         content: "➝ ";
         display: inline;
@@ -165,7 +191,7 @@ Sochi
     .pages_list {
         background: #fff;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
         text-align: left;
         color: #000;
         overflow-y: auto;
@@ -209,7 +235,7 @@ Sochi
     .jquery-logs-menu,
     .wrapperListOfAltTags {
         width: 805px;
-        top: calc(var(--center-menu-height) + 31px);
+        top: calc(var(--center-menu-height) + 100px);
         right: 15px;
         z-index: 999999;
     }
@@ -428,7 +454,15 @@ Sochi
 
 }
 .deletePage {
-
+    padding: 3px 6.05px;
+    border-radius: 15px;
+    border: none;
+    background: wheat;
+    transition: .3s;
+}
+.deletePage:hover {
+    background-color: #880707;
+    color: #fff;
 }
 
 /* Стили для блока Logs */
@@ -598,6 +632,28 @@ Sochi
 } 
 .activeBtn {
     background-color: #159c20;
+}
+
+/* Поиск страниц */
+.searchPagesWrapper {
+    text-align: right;
+    margin-bottom: 5px;
+    padding: 0 3px;
+}
+.searchPages {
+    width: 100%;
+    height: 30px;
+    outline: none;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    padding: .375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    transition: .3s;
+}
+.hide {
+    display: none !important;
 }
 
 
