@@ -22,7 +22,7 @@ document.addEventListener("click", function (e) {
     }
 
     if (e.target.closest('#submit-buttonPlagin')) {
-        const menu = document.querySelector('.jquery-logs-menu, .wrapperListOfAltTags');
+        const menu = document.querySelector('.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong');
         menu.classList.add('active'); //не скрывать форму при повторном нажатии
     }
 });
@@ -31,7 +31,7 @@ document.addEventListener("click", function (e) {
 document.addEventListener('keyup', function (e) {
     if (e.ctrlKey && e.code === 'KeyZ') {
         const rightMenu = document.querySelector('.jquery-right-menu');
-        const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags');
+        const otherMenus = document.querySelectorAll('.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong');
 
         if(!rightMenu){
             return
@@ -41,11 +41,13 @@ document.addEventListener('keyup', function (e) {
         rightMenu.classList.toggle('active');
        
         modul.showIgmAltField(); // Показать поле ImgAlt
+        modul.showFormStrong(); // Показать поле Strong
 
         if (rightMenu.classList.contains('active')) {
             // Если jquery-right-menu активен, то выполняем ваш код
             modul.showPagesInPageBlockPlagin();
             modul.numberOfCities();
+            modul.numberOfStrong();
             modul.deleteAllPage();
             modul.addLangSite();
             modul.updateWhenPrinting();
@@ -186,7 +188,7 @@ let offsetY = 0;
 
 document.addEventListener('mousedown', (e) => {
     if (e.target.classList.contains('headeR')) {
-        draggedElement = e.target.closest('.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags');
+        draggedElement = e.target.closest('.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong');
         const rect = draggedElement.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
@@ -373,8 +375,8 @@ function initiateWebSocket() {
     }
 
     // Динамически создает URL веб-сокета
-    window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`); //lock
-    // window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
+    // window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`); //lock
+    window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
 
 
 
@@ -644,7 +646,10 @@ function deleteAllPage() {
 // Функция отправки текста на сервер Go для создания LadingPage
 async function sendToGoServer(text,currentLineCheckbox,prefixForUrl) {
     const objectWithImgAndInputValues = createsAnObjectWithPicturesAndInputValue();//объект со значениями имг и инпута
-    const objectJson = JSON.stringify(objectWithImgAndInputValues); // Переобразуем в json для отправки на сервер
+    const objectJsonImg = JSON.stringify(objectWithImgAndInputValues); // Переобразуем в json для отправки на сервер
+
+    // Отправляет все ключи слова Strong на сервер
+    const sendsAllStrong = sendsAllStrongWordKeysToTheServer()
 
     const data = new URLSearchParams();
     data.append('text', text);
@@ -653,7 +658,8 @@ async function sendToGoServer(text,currentLineCheckbox,prefixForUrl) {
     data.append('region', region);
     data.append('service', service);
     data.append('prefixForUrl', prefixForUrl);
-    data.append('imgInputPairs', objectJson); // Добавление объекта как строки JSON
+    data.append('imgInputPairs', objectJsonImg); // Добавление объекта как строки JSON
+    data.append('sendsAllStrong', sendsAllStrong); // Отправляет все ключи слова Strong на сервер
     try {
         const response = await fetch('/CreateLandingPagePlagin', {
             method: 'POST',
@@ -754,8 +760,7 @@ function showIgmAltField() {
     }
 
 }
-
-// Функция для поля IgmAlt
+// Функция для отправлки картинок на сервер
 function createsAnObjectWithPicturesAndInputValue() {
     let imgInputPairs = {} // Создаем пустой объект
     // Находим все div, содержащие изображения и поля ввода
@@ -783,8 +788,48 @@ function createsAnObjectWithPicturesAndInputValue() {
 
 }
 
-// Обработчик для кнопок фильтрации
+// Функция для показа формы Strong
+function showFormStrong(){
+    const btnAddStrong = document.querySelector('#btnAddStrong'),
+        wrapperListOfStrong = document.querySelector('.wrapperListOfStrong');
 
+    if(btnAddStrong){
+        btnAddStrong.addEventListener('click', function() {
+
+
+            wrapperListOfStrong.classList.toggle('active');
+        })
+    }
+}
+// Функция для подсчета количество введенных Strong
+function numberOfStrong() {
+    const selectedStrong = document.querySelector('.listOfStrong');
+    const numberOfStrongElement = document.querySelector('.numberOfStrong');
+
+    function updateNumberOfStrong() {
+        // Убираем пробелы и переносы строк в начале и конце,
+        // не затрагивая пробелы и переносы строк в середине текста.
+        const cleanedValue = selectedStrong.value.replace(/^\s+|\s+$/g, '');
+        
+        const lines = cleanedValue.split('\n').filter(line => line.trim() !== '').length; // Фильтруем пустые строки и подсчитываем количество оставшихся
+        numberOfStrongElement.textContent = lines;
+    }
+
+    // обновляем счетчик строк при вводе
+    selectedStrong.addEventListener('input', updateNumberOfStrong);
+
+    // обновляем счетчик строк при загрузке страницы
+    updateNumberOfStrong();
+}
+// Отправляет все ключи слова стронг на сервер
+function sendsAllStrongWordKeysToTheServer() {
+    const listOfStrong = document.querySelector('.listOfStrong');
+
+
+    return listOfStrong.value;
+}
+
+// Обработчик для кнопок фильтрации
 document.body.addEventListener('click', function() {
     document.querySelectorAll('.exclusionButtons').forEach(button => {
         button.addEventListener('click', handlerForFilterButtons);
@@ -866,11 +911,13 @@ window.modul = {
     updateCharacterCount,
     showPagesInPageBlockPlagin,
     numberOfCities,
+    numberOfStrong,
     initiateWebSocket,
     deleteAllPage,
     addLangSite,
     updateWhenPrinting,
     showIgmAltField,
+    showFormStrong,
     createsAnObjectWithPicturesAndInputValue,
     handlerForFilterButtons, // Обработчик для кнопок фильтрации
     searchPages, // Поиск страниц

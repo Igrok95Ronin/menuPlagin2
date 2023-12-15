@@ -91,6 +91,16 @@ Sochi
     </div>
 </div>
 
+<!-- Поле для Strong -->
+<div class="wrapperListOfStrong">
+    <div class="headeR">
+        Strong <span class="numberOfStrong"><!-- Количество картинок --></span><div id="hide_menu">–</div>
+    </div>
+    <div class="jquery-menu">
+        <textarea class="listOfStrong" name="listOfStrong" cols="30" rows="10" placeholder="..."></textarea>
+    </div>
+</div>
+
 
 <!-- Здесь HTML код спиннера -->
 <div id="spinner" style="display:none;">
@@ -215,7 +225,8 @@ Sochi
     .jquery-right-menu,
     .jquery-logs-menu,
     .jquery-center-menu,
-    .wrapperListOfAltTags {
+    .wrapperListOfAltTags,
+    .wrapperListOfStrong {
         background-color: #fff;
         display: none;
         border: 1px solid #ccc;
@@ -250,7 +261,8 @@ Sochi
     .jquery-right-menu.active,
     .jquery-logs-menu.active,
     .jquery-center-menu.active,
-    .wrapperListOfAltTags.active {
+    .wrapperListOfAltTags.active,
+    .wrapperListOfStrong.active {
         display: block;
     }
 
@@ -636,7 +648,6 @@ Sochi
 
 /* Поиск страниц */
 .searchPagesWrapper {
-    text-align: right;
     margin-bottom: 5px;
     padding: 0 3px;
 }
@@ -646,14 +657,35 @@ Sochi
     outline: none;
     border: 1px solid #ced4da;
     border-radius: 3px;
-    padding: .375rem 0.75rem;
+    padding: 6px 12px;
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
     transition: .3s;
+    box-sizing: border-box !important;
 }
 .hide {
     display: none !important;
+}
+mark {
+    background: #ffff00;
+}
+
+/* Стили для формы Strong */
+.wrapperListOfStrong {
+    width: 500px;
+    top: calc(var(--center-menu-height) + 100px);
+    left: calc(50% - 250px);
+    z-index: 999;
+}
+.headeR {
+}
+.numberOfStrong {
+}
+.jquery-menu {
+}
+.listOfStrong {
+    width: 100%;
 }
 
 
