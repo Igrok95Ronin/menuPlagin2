@@ -118,9 +118,9 @@ Sochi
 
 <div class="jquery-logs-menu">
 	<div class="headeR headerLogs">
-		<p>Logs</p>
+		<p class="headeR">Logs</p>
+		<span id="hide_menu">–</span>
 		<div class="btnWrapper">
-			<span id="hide_menu">–</span>
 			<span id="closeWindow">x</span>
 		</div>
 	</div>
@@ -157,6 +157,9 @@ Sochi
 			rows="10"
 			placeholder="..."
 		></textarea>
+		<div class="btnFormStrongWrapper">
+			<button class="btnFormStrong">Выполнить</button>
+		</div>
 	</div>
 </div>
 
@@ -174,6 +177,9 @@ Sochi
 			rows="10"
 			placeholder="..."
 		></textarea>
+		<div class="btnFormCapitalWrapper">
+			<button class="btnFormCapital">Выполнить</button>
+		</div>
 	</div>
 </div>
 
@@ -778,15 +784,42 @@ Sochi
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
-		grid-template-columns: repeat(1, 1fr 0.1fr);
-		gap: 20px;
+		grid-template-columns: repeat(1, 1fr 0.03fr 0.03fr);
+		gap: 0px;
+	}
+	.headerLogs p {
+		margin: 0 !important;
 	}
 	.btnWrapper {
 		display: flex;
 		justify-content: center;
 		gap: 10px;
 	}
-	.closeWindow {
+	#closeWindow {
 		cursor: pointer;
+	}
+
+	/* Стили для кнопки Выполнить */
+	.btnFormStrongWrapper,
+	.btnFormCapitalWrapper {
+		text-align: right;
+		padding: 5px;
+		border: 1px solid #767676;
+		border-top: 0px;
+		border-radius: 3px;
+	}
+	.btnFormStrong,
+	.btnFormCapital {
+		border: none;
+		border-radius: 2px;
+		font-weight: 700;
+		background: tomato;
+		color: #fff;
+		padding: 3px 6px;
+		transition: 0.3s;
+	}
+	.btnFormStrong:hover,
+	.btnFormCapital:hover {
+		background: #198754;
 	}
 </style>

@@ -981,6 +981,7 @@ document.addEventListener('click', function (event) {
 		)
 	}
 
+	// Закрывает окно Logs
 	function closeWindowLogs() {
 		const btnCloseWindow = document.querySelector('#closeWindow'),
 			jqueryLogsMenu = document.querySelector('.jquery-logs-menu')
@@ -1008,5 +1009,140 @@ document.addEventListener('click', function (event) {
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
 		closeWindowLogs, // Закрытие окна Logs
+	}
+})()
+
+// Клики на кнопки
+document.addEventListener('click', e => {
+	if (e.target.matches('.btnFormStrong')) {
+		singleRequest.makesTextBold()
+	} else if (e.target.matches('.btnFormCapital')) {
+		singleRequest.makesTextCapital()
+	}
+})
+
+!(function () {
+	// Получаем текущий url
+	var baseUrl = window.location.origin // Начальный домен, например "https://example.com"
+	var url = window.location.href // Получаем текущий URL
+	var parts = url.split('/')
+	var index = parts.indexOf('sites')
+	if (index !== -1 && parts.length > index + 2) {
+		var region = parts[index + 1]
+		var service = parts[index + 2]
+	}
+
+	// Функция спиннер
+	function spinner(spinner) {
+		document.getElementById('stopButton').style.display = 'none'
+		document.querySelector('.spinnerLogsTime').style.display = 'none'
+
+		if (spinner) {
+			document.getElementById('spinner').style.display = 'block'
+			document.body.classList.add('darkFon')
+		} else {
+			document.getElementById('spinner').style.display = 'none'
+			document.body.classList.remove('darkFon')
+		}
+	}
+
+	//Делает текст жирным
+	function makesTextBold() {
+		const valueListOfStrong = document.querySelector('.listOfStrong').value
+
+		let valueListOfStrongTrim = valueListOfStrong.trim() // Убираем пробелы
+
+		// Если поле не пустое выполниться
+		if (valueListOfStrongTrim) {
+			// Отображение индикатора загрузки и установка темного фона во время обработки запроса
+			spinner(true)
+
+			// Объект с данными
+			const data = {
+				valueListOfStrongTrim: valueListOfStrongTrim, // Ключевые слова
+				region: region, // регион н-р at
+				service: service, // название сайта н-р test
+			}
+			const jsonData = JSON.stringify(data)
+
+			// Отправить запрос на сервер
+			fetch('/singlerequestmakestextbold', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: jsonData, // Отправляем JSON
+			})
+				.then(response => {
+					if (!response.ok) {
+						// Скрыть индикатора загрузки и темного фона во время обработки запроса
+						spinner(false)
+						throw new Error('Ошибка запроса' + response.statusText)
+					}
+					// return response.json() // Возвращаем если это необходимо
+
+					// Скрыть индикатора загрузки и темного фона во время обработки запроса
+					spinner(false)
+				})
+				.then(data => {
+					// Дополнительная обработка полученных данных
+				})
+				.catch(error => {
+					console.log(
+						'Что-то пошло не так при отправке данных на сервер в функции makesTextBold: ',
+						error
+					)
+				})
+		}
+	}
+
+	// Делает текст с Заглавным
+	function makesTextCapital() {
+		const listOfCapital = document.querySelector('.listOfCapital').value
+
+		let valueListOfCapitalTrim = listOfCapital.trim() // Убираем пробелы
+
+		// Если условие истина выполниться
+		if (valueListOfCapitalTrim) {
+			// Отображение индикатора загрузки и установка темного фона во время обработки запроса
+			spinner(true)
+
+			// Объект с данными
+			const data = {
+				valueListOfCapitalTrim: valueListOfCapitalTrim, // Ключевые слова
+				region: region, // регион н-р at
+				service: service, // название сайта н-р test
+			}
+			const jsonData = JSON.stringify(data)
+
+			// Отправить запрос на сервер
+			fetch('/singlerequestmakestextcapital', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: jsonData,
+			})
+				.then(response => {
+					if (!response.ok) {
+						// Скрыть индикатора загрузки и темного фона во время обработки запроса
+						spinner(false)
+						throw new Error('Ошибка запроса' + response.statusText)
+					}
+					// Скрыть индикатора загрузки и темного фона во время обработки запроса
+					spinner(false)
+				})
+				.catch(error => {
+					console.log(
+						'Что-то пошло не так при отправке данных на сервер в функции makesTextCapital: ',
+						error
+					)
+				})
+		}
+	}
+
+	window.singleRequest = {
+		makesTextBold,
+		makesTextCapital,
 	}
 })()
