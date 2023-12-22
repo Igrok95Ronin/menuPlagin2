@@ -1018,6 +1018,8 @@ document.addEventListener('click', e => {
 		singleRequest.makesTextBold()
 	} else if (e.target.matches('.btnFormCapital')) {
 		singleRequest.makesTextCapital()
+	} else if (e.target.matches('.btnFormImg')) {
+		singleRequest.changesAltTagsOfImages()
 	}
 })
 
@@ -1141,8 +1143,49 @@ document.addEventListener('click', e => {
 		}
 	}
 
+	// Меняет alt теги картинок
+	function changesAltTagsOfImages() {
+		const objectWithImgAndInputValues =
+			modul.createsAnObjectWithPicturesAndInputValue() //объект со значениями имг и инпута
+
+		// Проверяем объект на пустоту
+		if (Object.keys(objectWithImgAndInputValues).length !== 0) {
+			spinner(true) // Активируем спиннер
+			let objectWithImgAndInputValuesJson = JSON.stringify(
+				objectWithImgAndInputValues // Переобразуем объект в json
+			)
+			// Объект необходимых данных
+			let data = {
+				objectJsonImg: objectWithImgAndInputValuesJson,
+				region: region,
+				service: service,
+			}
+
+			const objectJsonImg = JSON.stringify(data) // Переобразуем в json для отправки на сервер
+
+			fetch('/singlerequestchangesalttagsofimages', {
+				method: 'POST', // Метод запроса
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: objectJsonImg,
+			})
+				.then(response => {
+					if (!response.ok) {
+						spinner(false) // Убираем спиннер
+						throw new Error('Ошибка запроса' + response.statusText)
+					}
+					spinner(false) // Убираем спиннер
+				})
+				.catch(error => {
+					console.log('Что-то пошло не так при обработке картинок: ', error)
+				})
+		}
+	}
+
 	window.singleRequest = {
 		makesTextBold,
 		makesTextCapital,
+		changesAltTagsOfImages,
 	}
 })()
