@@ -94,6 +94,7 @@ Sochi
 				<button id="btnAddImgAlt" class="menuBtn">ImgAlt</button>
 				<button id="btnAddStrong" class="menuBtn">Strong</button>
 				<button id="btnAddCapital" class="menuBtn">az > Az</button>
+				<button id="btnAddTitleSuffix" class="menuBtn">TitleSuffix</button>
 			</div>
 
 			<textarea
@@ -182,6 +183,28 @@ Sochi
 		></textarea>
 		<div class="btnFormCapitalWrapper">
 			<button class="btnFormCapital">Выполнить</button>
+		</div>
+	</div>
+</div>
+
+<!-- Поле для Title Suffix -->
+<div class="wrapperListOfTitleSuffix">
+	<div class="headeR">
+		Title Suffix
+		<span class="numberOfTitleSuffixCounter"
+			><!-- Количество Title Suffix --></span
+		>
+		<div id="hide_menu">–</div>
+	</div>
+	<div class="jquery-menu">
+		<input
+			class="listOfTitleSuffix"
+			type="text"
+			name="listOfTitleSuffix"
+			placeholder="..."
+		/>
+		<div class="btnFormTitleSuffixWrapper">
+			<button class="btnFormTitleSuffix">Выполнить</button>
 		</div>
 	</div>
 </div>
@@ -309,7 +332,8 @@ Sochi
 	.jquery-center-menu,
 	.wrapperListOfAltTags,
 	.wrapperListOfStrong,
-	.wrapperListOfCapital {
+	.wrapperListOfCapital,
+	.wrapperListOfTitleSuffix {
 		background-color: #fff;
 		display: none;
 		border: 1px solid #ccc;
@@ -346,7 +370,8 @@ Sochi
 	.jquery-center-menu.active,
 	.wrapperListOfAltTags.active,
 	.wrapperListOfStrong.active,
-	.wrapperListOfCapital.active {
+	.wrapperListOfCapital.active,
+	.wrapperListOfTitleSuffix.active {
 		display: block;
 	}
 
@@ -784,6 +809,31 @@ Sochi
 		width: 100%;
 	}
 
+	/* Стили для Title Suffix */
+	.wrapperListOfTitleSuffix {
+		width: 500px;
+		top: calc(var(--center-menu-height) + 150px);
+		left: calc(50% - 250px);
+		z-index: 999;
+	}
+	.headeR {
+	}
+	.numberOfTitleSuffixCounter {
+	}
+	.jquery-menu {
+	}
+	.listOfTitleSuffix {
+		width: 100%;
+		margin: 5px 0;
+		height: 32px;
+	}
+	.btnFormTitleSuffixWrapper {
+		text-align: center !important;
+		border: 1px solid #767676 !important;
+	}
+	.btnFormTitleSuffix {
+	}
+
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
@@ -805,7 +855,8 @@ Sochi
 	/* Стили для кнопки Выполнить */
 	.btnFormStrongWrapper,
 	.btnFormCapitalWrapper,
-	.btnFormImgWrapper {
+	.btnFormImgWrapper,
+	.btnFormTitleSuffixWrapper {
 		text-align: right;
 		padding: 5px;
 		border: 1px solid #767676;
@@ -814,7 +865,8 @@ Sochi
 	}
 	.btnFormStrong,
 	.btnFormCapital,
-	.btnFormImg {
+	.btnFormImg,
+	.btnFormTitleSuffix {
 		border: none;
 		border-radius: 2px;
 		font-weight: 700;
@@ -825,7 +877,8 @@ Sochi
 	}
 	.btnFormStrong:hover,
 	.btnFormCapital:hover,
-	.btnFormImg:hover {
+	.btnFormImg:hover,
+	.btnFormTitleSuffix:hover {
 		background: #198754;
 	}
 </style>

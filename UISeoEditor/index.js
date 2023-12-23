@@ -23,7 +23,7 @@ document.addEventListener('click', function (e) {
 
 	if (e.target.closest('#submit-buttonPlagin')) {
 		const menu = document.querySelector(
-			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital'
+			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
 		)
 		menu.classList.add('active') //не скрывать форму при повторном нажатии
 	}
@@ -34,7 +34,7 @@ document.addEventListener('keyup', function (e) {
 	if (e.ctrlKey && e.code === 'KeyZ') {
 		const rightMenu = document.querySelector('.jquery-right-menu')
 		const otherMenus = document.querySelectorAll(
-			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital'
+			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
 		)
 
 		if (!rightMenu) {
@@ -47,6 +47,7 @@ document.addEventListener('keyup', function (e) {
 		modul.showIgmAltField() // Показать поле ImgAlt
 		modul.showFormStrong() // Показать поле Strong
 		modul.showFormCapital() // Показать поле Capital
+		modul.showFormTitleSuffix() // Показать поле TitleSuffix
 
 		if (rightMenu.classList.contains('active')) {
 			// Если jquery-right-menu активен, то выполняем ваш код
@@ -54,6 +55,7 @@ document.addEventListener('keyup', function (e) {
 			modul.numberOfCities()
 			modul.numberOfStrong()
 			modul.numberOfCapital()
+			modul.numberOfTitleSuffix()
 			modul.deleteAllPage()
 			modul.addLangSite()
 			modul.updateWhenPrinting()
@@ -208,7 +210,7 @@ let offsetY = 0
 document.addEventListener('mousedown', e => {
 	if (e.target.classList.contains('headeR')) {
 		draggedElement = e.target.closest(
-			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital'
+			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
 		)
 		const rect = draggedElement.getBoundingClientRect()
 		offsetX = e.clientX - rect.left
@@ -686,6 +688,9 @@ document.addEventListener('click', function (event) {
 		// Отправляет все ключи слова Capital на сервер
 		const sendsAllCapital = sendsAllCapitalWordKeysToTheServer()
 
+		// Отправляет Title Suffix на сервер
+		const sendTitleSuffix = sendsTitleSuffixToTheServer()
+
 		const data = new URLSearchParams()
 		data.append('text', text)
 		data.append('checked', currentLineCheckbox) // Тут получает чекбокс отмеченой строки
@@ -696,6 +701,7 @@ document.addEventListener('click', function (event) {
 		data.append('imgInputPairs', objectJsonImg) // Добавление объекта как строки JSON
 		data.append('sendsAllStrong', sendsAllStrong) // Отправляет все ключи слова Strong на сервер
 		data.append('sendsAllCapital', sendsAllCapital) // Отправляет все ключи слова Capital на сервер
+		data.append('sendTitleSuffix', sendTitleSuffix) // Отправляет Title Suffix на сервер
 		try {
 			const response = await fetch('/CreateLandingPagePlagin', {
 				method: 'POST',
@@ -862,11 +868,11 @@ document.addEventListener('click', function (event) {
 
 	// Функция для показа формы Capital
 	function showFormCapital() {
-		const btnAddStrong = document.querySelector('#btnAddCapital'),
+		const btnAddCapital = document.querySelector('#btnAddCapital'),
 			wrapperListOfCapital = document.querySelector('.wrapperListOfCapital')
 
-		if (btnAddStrong) {
-			btnAddStrong.addEventListener('click', function () {
+		if (btnAddCapital) {
+			btnAddCapital.addEventListener('click', function () {
 				wrapperListOfCapital.classList.toggle('active')
 			})
 		}
@@ -893,9 +899,40 @@ document.addEventListener('click', function (event) {
 		// обновляем счетчик строк при загрузке страницы
 		updateNumberOfCapital()
 	}
-	// Отправляет все ключи слова Capital на сервер
+	// Отправляет Title Suffix на сервер
 	function sendsAllCapitalWordKeysToTheServer() {
 		const listOfStrong = document.querySelector('.listOfCapital')
+
+		return listOfStrong.value
+	}
+
+	// Функция для показа формы TitleSuffix
+	function showFormTitleSuffix() {
+		const btnAddTitleSuffix = document.querySelector('#btnAddTitleSuffix'),
+			wrapperListOfTitleSuffix = document.querySelector(
+				'.wrapperListOfTitleSuffix'
+			)
+
+		if (btnAddTitleSuffix) {
+			btnAddTitleSuffix.addEventListener('click', function () {
+				wrapperListOfTitleSuffix.classList.toggle('active')
+			})
+		}
+	}
+	// Функция для подсчета количество введенных Capital
+	function numberOfTitleSuffix() {
+		const listOfTitleSuffix = document.querySelector('.listOfTitleSuffix'),
+			numberOfTitleSuffixCounter = document.querySelector(
+				'.numberOfTitleSuffixCounter'
+			)
+
+		listOfTitleSuffix.addEventListener('input', () => {
+			numberOfTitleSuffixCounter.textContent = listOfTitleSuffix.value.length
+		})
+	}
+	// Отправляет все ключи слова Capital на сервер
+	function sendsTitleSuffixToTheServer() {
+		const listOfStrong = document.querySelector('.listOfTitleSuffix')
 
 		return listOfStrong.value
 	}
@@ -998,6 +1035,7 @@ document.addEventListener('click', function (event) {
 		numberOfCities,
 		numberOfStrong,
 		numberOfCapital,
+		numberOfTitleSuffix,
 		initiateWebSocket,
 		deleteAllPage,
 		addLangSite,
@@ -1005,6 +1043,7 @@ document.addEventListener('click', function (event) {
 		showIgmAltField,
 		showFormStrong,
 		showFormCapital,
+		showFormTitleSuffix,
 		createsAnObjectWithPicturesAndInputValue,
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
@@ -1020,6 +1059,8 @@ document.addEventListener('click', e => {
 		singleRequest.makesTextCapital()
 	} else if (e.target.matches('.btnFormImg')) {
 		singleRequest.changesAltTagsOfImages()
+	} else if (e.target.matches('.btnFormTitleSuffix')) {
+		singleRequest.addTitleSuffix()
 	}
 })
 
@@ -1143,6 +1184,49 @@ document.addEventListener('click', e => {
 		}
 	}
 
+	// Добавляет к Title Suffix
+	function addTitleSuffix() {
+		const listOfTitleSuffix = document.querySelector('.listOfTitleSuffix').value
+
+		let listOfTitleSuffixTrim = listOfTitleSuffix.trim() // Убираем пробелы
+
+		// Если поле не пустое то выполниться
+		if (listOfTitleSuffixTrim) {
+			spinner(true) // Активируем спиннер
+
+			// Создаем объект данных
+			let data = {
+				listOfTitleSuffixTrim: listOfTitleSuffixTrim,
+				region: region,
+				service: service,
+			}
+
+			let dataJson = JSON.stringify(data) // Создаем JSON
+
+			// Отправить запрос на сервер
+			fetch('/singlerequestaddtitlesuffix', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: dataJson,
+			})
+				.then(response => {
+					if (!response.ok) {
+						spinner(false)
+						throw new Error('Ошибка запроса' + response.statusText)
+					}
+					spinner(false)
+				})
+				.catch(error => {
+					console.log(
+						'Что-то пошло не так при отправке данных на сервер в функции addTitleSuffix: ',
+						error
+					)
+				})
+		}
+	}
+
 	// Меняет alt теги картинок
 	function changesAltTagsOfImages() {
 		const objectWithImgAndInputValues =
@@ -1187,5 +1271,6 @@ document.addEventListener('click', e => {
 		makesTextBold,
 		makesTextCapital,
 		changesAltTagsOfImages,
+		addTitleSuffix,
 	}
 })()
