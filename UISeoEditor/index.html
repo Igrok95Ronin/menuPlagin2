@@ -95,6 +95,7 @@ Sochi
 				<button id="btnAddStrong" class="menuBtn">Strong</button>
 				<button id="btnAddCapital" class="menuBtn">az > Az</button>
 				<button id="btnAddTitleSuffix" class="menuBtn">TitleSuffix</button>
+				<button id="btnAddLink" class="menuBtn">Link</button>
 			</div>
 
 			<textarea
@@ -205,6 +206,46 @@ Sochi
 		/>
 		<div class="btnFormTitleSuffixWrapper">
 			<button class="btnFormTitleSuffix">Выполнить</button>
+		</div>
+	</div>
+</div>
+
+<!-- Поле для Link -->
+<div class="wrapperListOfLink">
+	<div class="headeR">
+		Link <span class="numberOfLink"><!-- Количество Link --></span>
+		<div id="hide_menu">–</div>
+	</div>
+	<div class="jquery-menu">
+		<div class="textareaWrapper">
+			<textarea
+				class="firsPartText__link"
+				name="firsPartText__link"
+				cols="30"
+				rows="10"
+				placeholder="Первая часть текста"
+			></textarea>
+			<textarea
+				class="secondPartText__link"
+				name="secondPartText__link"
+				cols="30"
+				rows="10"
+				placeholder="Вторая часть текста"
+			></textarea>
+			<textarea
+				class="insertedLink__link"
+				name="insertedLink__link"
+				cols="30"
+				rows="10"
+				placeholder="Ссылка"
+			>
+<a href='https://test.ru'>Test</a><br>
+<a href='https://test2.ru'>Test2</a>
+		</textarea
+			>
+		</div>
+		<div class="btnFormLinkWrapper">
+			<button class="btnFormLink">Выполнить</button>
 		</div>
 	</div>
 </div>
@@ -333,7 +374,8 @@ Sochi
 	.wrapperListOfAltTags,
 	.wrapperListOfStrong,
 	.wrapperListOfCapital,
-	.wrapperListOfTitleSuffix {
+	.wrapperListOfTitleSuffix,
+	.wrapperListOfLink {
 		background-color: #fff;
 		display: none;
 		border: 1px solid #ccc;
@@ -371,7 +413,8 @@ Sochi
 	.wrapperListOfAltTags.active,
 	.wrapperListOfStrong.active,
 	.wrapperListOfCapital.active,
-	.wrapperListOfTitleSuffix.active {
+	.wrapperListOfTitleSuffix.active,
+	.wrapperListOfLink.active {
 		display: block;
 	}
 
@@ -834,6 +877,40 @@ Sochi
 	.btnFormTitleSuffix {
 	}
 
+	/* Стили для формы Link */
+	.wrapperListOfLink {
+		width: 500px;
+		top: calc(var(--center-menu-height) + 0px);
+		left: calc(50% - 367px);
+		z-index: 999;
+	}
+
+	.headeR {
+	}
+	.numberOfLink {
+	}
+	.jquery-menu {
+	}
+	.textareaWrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.firsPartText__link {
+	}
+	.secondPartText__link,
+	.firsPartText__link,
+	.insertedLink__link {
+		padding: 5px;
+	}
+	.insertedLink__link {
+		height: 100px;
+	}
+	.btnFormLinkWrapper {
+	}
+	.btnFormLink {
+	}
+
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
@@ -856,7 +933,8 @@ Sochi
 	.btnFormStrongWrapper,
 	.btnFormCapitalWrapper,
 	.btnFormImgWrapper,
-	.btnFormTitleSuffixWrapper {
+	.btnFormTitleSuffixWrapper,
+	.btnFormLinkWrapper {
 		text-align: right;
 		padding: 5px;
 		border: 1px solid #767676;
@@ -866,7 +944,8 @@ Sochi
 	.btnFormStrong,
 	.btnFormCapital,
 	.btnFormImg,
-	.btnFormTitleSuffix {
+	.btnFormTitleSuffix,
+	.btnFormLink {
 		border: none;
 		border-radius: 2px;
 		font-weight: 700;

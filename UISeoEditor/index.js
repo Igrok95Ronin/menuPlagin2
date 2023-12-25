@@ -23,7 +23,7 @@ document.addEventListener('click', function (e) {
 
 	if (e.target.closest('#submit-buttonPlagin')) {
 		const menu = document.querySelector(
-			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
+			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
 		)
 		menu.classList.add('active') //не скрывать форму при повторном нажатии
 	}
@@ -34,7 +34,7 @@ document.addEventListener('keyup', function (e) {
 	if (e.ctrlKey && e.code === 'KeyZ') {
 		const rightMenu = document.querySelector('.jquery-right-menu')
 		const otherMenus = document.querySelectorAll(
-			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
+			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
 		)
 
 		if (!rightMenu) {
@@ -48,6 +48,7 @@ document.addEventListener('keyup', function (e) {
 		modul.showFormStrong() // Показать поле Strong
 		modul.showFormCapital() // Показать поле Capital
 		modul.showFormTitleSuffix() // Показать поле TitleSuffix
+		modul.showFormLink() // Показать Форму Link
 
 		if (rightMenu.classList.contains('active')) {
 			// Если jquery-right-menu активен, то выполняем ваш код
@@ -210,7 +211,7 @@ let offsetY = 0
 document.addEventListener('mousedown', e => {
 	if (e.target.classList.contains('headeR')) {
 		draggedElement = e.target.closest(
-			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix'
+			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
 		)
 		const rect = draggedElement.getBoundingClientRect()
 		offsetX = e.clientX - rect.left
@@ -687,9 +688,10 @@ document.addEventListener('click', function (event) {
 		const sendsAllStrong = sendsAllStrongWordKeysToTheServer()
 		// Отправляет все ключи слова Capital на сервер
 		const sendsAllCapital = sendsAllCapitalWordKeysToTheServer()
-
 		// Отправляет Title Suffix на сервер
 		const sendTitleSuffix = sendsTitleSuffixToTheServer()
+		// Отправляет Links на сервер
+		const sendAllLink = sendsAllLinksToTheServer()
 
 		const data = new URLSearchParams()
 		data.append('text', text)
@@ -702,6 +704,7 @@ document.addEventListener('click', function (event) {
 		data.append('sendsAllStrong', sendsAllStrong) // Отправляет все ключи слова Strong на сервер
 		data.append('sendsAllCapital', sendsAllCapital) // Отправляет все ключи слова Capital на сервер
 		data.append('sendTitleSuffix', sendTitleSuffix) // Отправляет Title Suffix на сервер
+		data.append('sendAllLink', sendAllLink) // Отправляет Links на сервер
 		try {
 			const response = await fetch('/CreateLandingPagePlagin', {
 				method: 'POST',
@@ -899,7 +902,7 @@ document.addEventListener('click', function (event) {
 		// обновляем счетчик строк при загрузке страницы
 		updateNumberOfCapital()
 	}
-	// Отправляет Title Suffix на сервер
+	// Отправляет все ключи слова Capital на сервер
 	function sendsAllCapitalWordKeysToTheServer() {
 		const listOfStrong = document.querySelector('.listOfCapital')
 
@@ -930,11 +933,39 @@ document.addEventListener('click', function (event) {
 			numberOfTitleSuffixCounter.textContent = listOfTitleSuffix.value.length
 		})
 	}
-	// Отправляет все ключи слова Capital на сервер
+	// Отправляет Title Suffix на сервер
 	function sendsTitleSuffixToTheServer() {
 		const listOfStrong = document.querySelector('.listOfTitleSuffix')
 
 		return listOfStrong.value
+	}
+
+	// Функция для показа формы Link
+	function showFormLink() {
+		const btnAddLink = document.querySelector('#btnAddLink'),
+			wrapperListOfLink = document.querySelector('.wrapperListOfLink')
+
+		if (btnAddLink) {
+			btnAddLink.addEventListener('click', function () {
+				wrapperListOfLink.classList.toggle('active')
+			})
+		}
+	}
+	// Отправляет все ключи слова Link на сервер
+	function sendsAllLinksToTheServer() {
+		const firsPartText = document.querySelector('.firsPartText__link').value,
+			secondPartText = document.querySelector('.secondPartText__link').value,
+			insertedLink = document.querySelector('.insertedLink__link').value
+
+		const dataForms = {
+			firsPartText: firsPartText,
+			secondPartText: secondPartText,
+			insertedLink: insertedLink,
+		}
+
+		jsonDataForms = JSON.stringify(dataForms)
+
+		return jsonDataForms
 	}
 
 	// Обработчик для кнопок фильтрации
@@ -1044,6 +1075,7 @@ document.addEventListener('click', function (event) {
 		showFormStrong,
 		showFormCapital,
 		showFormTitleSuffix,
+		showFormLink,
 		createsAnObjectWithPicturesAndInputValue,
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
@@ -1061,6 +1093,8 @@ document.addEventListener('click', e => {
 		singleRequest.changesAltTagsOfImages()
 	} else if (e.target.matches('.btnFormTitleSuffix')) {
 		singleRequest.addTitleSuffix()
+	} else if (e.target.matches('.btnFormLink')) {
+		singleRequest.addLink()
 	}
 })
 
@@ -1227,6 +1261,65 @@ document.addEventListener('click', e => {
 		}
 	}
 
+	// Добавляет ссылки асинхронного кода
+	async function addLink() {
+		const firsPartText = document.querySelector('.firsPartText__link').value,
+			secondPartText = document.querySelector('.secondPartText__link').value,
+			insertedLink = document.querySelector('.insertedLink__link').value
+
+		// Убираем пробелы
+		let firsPartTextTrim = firsPartText.trim(),
+			secondPartTextTrim = secondPartText.trim(),
+			insertedLinkTrim = insertedLink.trim()
+
+		// Если одно из полей истина
+		if (firsPartTextTrim || secondPartTextTrim) {
+			spinner(true) // Активируем спиннер
+			// Создаем объект
+			const dataForms = {
+				firsPartText: firsPartTextTrim,
+				secondPartText: secondPartTextTrim,
+				insertedLink: insertedLinkTrim,
+			}
+
+			let jsonDataForms = JSON.stringify(dataForms)
+
+			const data = {
+				dataForms: jsonDataForms,
+				region: region,
+				service: service,
+			}
+
+			// Делаем json
+			let jsonData = JSON.stringify(data)
+
+			// Оборачиваем  для обработки исключений
+			try {
+				let response = await fetch('/singlerequestaddlinks', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json', // Тип контента - JSON
+					},
+					body: jsonData,
+				})
+
+				// При получении плохого ответа
+				if (!response.ok) {
+					spinner(false) // Убираем спиннер
+					throw new Error('Ошибка запроса' + response.statusText)
+				}
+
+				spinner(false) // Убираем спиннер
+			} catch (error) {
+				spinner(false) // Убираем спиннер
+				console.log(
+					'Что-то пошло не так при отправке данных на сервер в функции addLink: ',
+					error
+				)
+			}
+		}
+	}
+
 	// Меняет alt теги картинок
 	function changesAltTagsOfImages() {
 		const objectWithImgAndInputValues =
@@ -1272,5 +1365,6 @@ document.addEventListener('click', e => {
 		makesTextCapital,
 		changesAltTagsOfImages,
 		addTitleSuffix,
+		addLink,
 	}
 })()
