@@ -18,7 +18,7 @@
 				<path
 					d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"
 				/>
-			</svg>
+			</svg> 
 			СОЗДАТЬ
 		</div>
 		<div class="pages_list">
@@ -96,6 +96,7 @@ Sochi
 				<button id="btnAddCapital" class="menuBtn">az > Az</button>
 				<button id="btnAddTitleSuffix" class="menuBtn">TitleSuffix</button>
 				<button id="btnAddLink" class="menuBtn">Link</button>
+				<button id="btnReplaceAll" class="menuBtn">ReplaceAll</button>
 			</div>
 
 			<textarea
@@ -239,13 +240,29 @@ Sochi
 				rows="10"
 				placeholder="Ссылка"
 			>
-<a href='https://test.ru'>Test</a><br>
-<a href='https://test2.ru'>Test2</a>
+<a href='https://test.ru'>Test</a>
 		</textarea
 			>
 		</div>
 		<div class="btnFormLinkWrapper">
 			<button class="btnFormLink">Выполнить</button>
+		</div>
+	</div>
+</div>
+
+<!-- Поле для ReplaceAll -->
+<div class="wrapperListOfReplaceAll">
+	<div class="headeR">
+		ReplaceAll
+		<div id="hide_menu">–</div>
+	</div>
+	<div class="jquery-menu">
+		<div class="listOfReplaceAllInputWrap">
+			<input class="listOfReplaceAll inpFirstText" type="text" name="listOfReplaceAllFirstText" placeholder="..." />
+			<input class="listOfReplaceAll inpSecondText" type="text" name="listOfReplaceAllSecondText" placeholder="..." />
+		</div>
+		<div class="btnFormReplaceAllWrapper">
+			<button class="btnFormReplaceAll">Выполнить</button>
 		</div>
 	</div>
 </div>
@@ -375,7 +392,9 @@ Sochi
 	.wrapperListOfStrong,
 	.wrapperListOfCapital,
 	.wrapperListOfTitleSuffix,
-	.wrapperListOfLink {
+	.wrapperListOfLink,
+	.wrapperListOfReplaceAll
+	 {
 		background-color: #fff;
 		display: none;
 		border: 1px solid #ccc;
@@ -414,7 +433,8 @@ Sochi
 	.wrapperListOfStrong.active,
 	.wrapperListOfCapital.active,
 	.wrapperListOfTitleSuffix.active,
-	.wrapperListOfLink.active {
+	.wrapperListOfLink.active,
+	.wrapperListOfReplaceAll.active {
 		display: block;
 	}
 
@@ -884,7 +904,6 @@ Sochi
 		left: calc(50% - 367px);
 		z-index: 999;
 	}
-
 	.headeR {
 	}
 	.numberOfLink {
@@ -911,6 +930,31 @@ Sochi
 	.btnFormLink {
 	}
 
+	/* Стили для формы ReplaceAll */
+	.wrapperListOfReplaceAll {
+		width: 500px;
+		top: calc(var(--center-menu-height) + 0px);
+		left: calc(50% - 367px);
+		z-index: 999;
+	}
+	.listOfReplaceAllInputWrap{
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		padding: 5px;
+	}
+	.listOfReplaceAll {
+		width: 100%;
+		height: 30px;
+		padding: 0 10px;
+	}
+	.btnFormReplaceAllWrapper {
+		border-top: 1px solid #767676 !important;
+		margin: 0 5px;
+	}
+	.btnFormReplaceAll {
+	}
+
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
@@ -934,7 +978,8 @@ Sochi
 	.btnFormCapitalWrapper,
 	.btnFormImgWrapper,
 	.btnFormTitleSuffixWrapper,
-	.btnFormLinkWrapper {
+	.btnFormLinkWrapper,
+	.btnFormReplaceAllWrapper {
 		text-align: right;
 		padding: 5px;
 		border: 1px solid #767676;
@@ -945,7 +990,8 @@ Sochi
 	.btnFormCapital,
 	.btnFormImg,
 	.btnFormTitleSuffix,
-	.btnFormLink {
+	.btnFormLink,
+	.btnFormReplaceAll {
 		border: none;
 		border-radius: 2px;
 		font-weight: 700;
@@ -957,7 +1003,9 @@ Sochi
 	.btnFormStrong:hover,
 	.btnFormCapital:hover,
 	.btnFormImg:hover,
-	.btnFormTitleSuffix:hover {
+	.btnFormTitleSuffix:hover,
+	.btnFormLink:hover,
+	.btnFormReplaceAll:hover {
 		background: #198754;
 	}
 </style>

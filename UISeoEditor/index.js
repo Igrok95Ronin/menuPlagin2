@@ -23,7 +23,7 @@ document.addEventListener('click', function (e) {
 
 	if (e.target.closest('#submit-buttonPlagin')) {
 		const menu = document.querySelector(
-			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
+			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
 		)
 		menu.classList.add('active') //не скрывать форму при повторном нажатии
 	}
@@ -34,7 +34,7 @@ document.addEventListener('keyup', function (e) {
 	if (e.ctrlKey && e.code === 'KeyZ') {
 		const rightMenu = document.querySelector('.jquery-right-menu')
 		const otherMenus = document.querySelectorAll(
-			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
+			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
 		)
 
 		if (!rightMenu) {
@@ -49,6 +49,7 @@ document.addEventListener('keyup', function (e) {
 		modul.showFormCapital() // Показать поле Capital
 		modul.showFormTitleSuffix() // Показать поле TitleSuffix
 		modul.showFormLink() // Показать Форму Link
+		modul.showFormReplaceAll() // Показать форму ReplaceAll
 
 		if (rightMenu.classList.contains('active')) {
 			// Если jquery-right-menu активен, то выполняем ваш код
@@ -211,7 +212,7 @@ let offsetY = 0
 document.addEventListener('mousedown', e => {
 	if (e.target.classList.contains('headeR')) {
 		draggedElement = e.target.closest(
-			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink'
+			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
 		)
 		const rect = draggedElement.getBoundingClientRect()
 		offsetX = e.clientX - rect.left
@@ -779,6 +780,7 @@ document.addEventListener('click', function (event) {
 				if (numberOfImages.textContent == '') {
 					numberOfImages.textContent = imgsAlt.length
 					imgsAlt.forEach(img => {
+						if (img.alt.length < 10) return // Если длина alt меньше 10 символов не показывать их
 						const div = document.createElement('div') // Создаем див
 						div.classList.add('imgOfAltTagWrapper') // добавляем класс
 
@@ -792,7 +794,7 @@ document.addEventListener('click', function (event) {
 						imgCopy.classList.add('imgOfAltTag') // получаем каждую картинку
 
 						div.appendChild(imgCopy) // вставляем его img в созданный див
-						div.appendChild(inp) // всталяем его inp в созданный див
+						div.appendChild(inp) // вставляем его inp в созданный див
 
 						listOfAltTags.appendChild(div) // див вставляем в основную обертку
 					})
@@ -922,7 +924,7 @@ document.addEventListener('click', function (event) {
 			})
 		}
 	}
-	// Функция для подсчета количество введенных Capital
+	// Функция для подсчета количество введенных TitleSuffix
 	function numberOfTitleSuffix() {
 		const listOfTitleSuffix = document.querySelector('.listOfTitleSuffix'),
 			numberOfTitleSuffixCounter = document.querySelector(
@@ -966,6 +968,18 @@ document.addEventListener('click', function (event) {
 		jsonDataForms = JSON.stringify(dataForms)
 
 		return jsonDataForms
+	}
+
+	// Функция для показа формы ReplaceAll
+	function showFormReplaceAll() {
+		const btnReplaceAll = document.querySelector('#btnReplaceAll'),
+		wrapperListOfReplaceAll = document.querySelector('.wrapperListOfReplaceAll')
+
+		if (btnReplaceAll) {
+			btnReplaceAll.addEventListener('click', function () {
+				wrapperListOfReplaceAll.classList.toggle('active')
+			})
+		}
 	}
 
 	// Обработчик для кнопок фильтрации
@@ -1076,6 +1090,7 @@ document.addEventListener('click', function (event) {
 		showFormCapital,
 		showFormTitleSuffix,
 		showFormLink,
+		showFormReplaceAll,
 		createsAnObjectWithPicturesAndInputValue,
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
@@ -1095,6 +1110,8 @@ document.addEventListener('click', e => {
 		singleRequest.addTitleSuffix()
 	} else if (e.target.matches('.btnFormLink')) {
 		singleRequest.addLink()
+	} else if (e.target.matches('.btnFormReplaceAll')){
+		singleRequest.replaceAll()
 	}
 })
 
@@ -1253,10 +1270,8 @@ document.addEventListener('click', e => {
 					spinner(false)
 				})
 				.catch(error => {
-					console.log(
-						'Что-то пошло не так при отправке данных на сервер в функции addTitleSuffix: ',
-						error
-					)
+					spinner(false) // Отключить спиннер
+					console.log('Что-то пошло не так при отправке данных на сервер в функции addTitleSuffix: ', error)
 				})
 		}
 	}
@@ -1360,11 +1375,55 @@ document.addEventListener('click', e => {
 		}
 	}
 
+	// Заменить слово ReplaceAll
+	function replaceAll(){
+		const firstText = document.querySelector('.inpFirstText').value,
+			secondText = document.querySelector('.inpSecondText').value;
+
+			// Убираем пробелы
+		const firstTextTrim = firstText.trim(),
+			secondTextTrim = secondText.trim();
+
+			// Если поле не пустое то выполниться
+		if(firstTextTrim && secondTextTrim) {
+			spinner(true) // Активируем спиннер
+
+			// Создаем объект данных
+			const data = {
+				firstTextTrim: firstTextTrim,
+				secondTextTrim: secondTextTrim,
+				region: region,
+				service: service
+			}
+
+			const jsonData = JSON.stringify(data)// Создаем JSON
+			
+			// Отправить запрос на сервер
+			fetch('/replaceallhandler', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: jsonData
+			}).then(response => {
+				if(!response.ok){
+					spinner(false) // Отключить спиннер
+					throw new Error("Ошибка при отправке запроса на сервер " + response.statusText)
+				}
+				spinner(false) // Отключить спиннер
+			}).catch(error => {
+				spinner(false) // Отключить спиннер
+				console.log('Что-то пошло не так при отправке данных на сервер в функции replaceAllHandler: ', error)
+			})
+		}
+	}
+
 	window.singleRequest = {
 		makesTextBold,
 		makesTextCapital,
 		changesAltTagsOfImages,
 		addTitleSuffix,
 		addLink,
+		replaceAll
 	}
 })()
