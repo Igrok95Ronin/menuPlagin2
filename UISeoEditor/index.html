@@ -97,6 +97,7 @@ Sochi
 				<button id="btnAddTitleSuffix" class="menuBtn">TitleSuffix</button>
 				<button id="btnAddLink" class="menuBtn">Link</button>
 				<button id="btnReplaceAll" class="menuBtn">ReplaceAll</button>
+				<button id="btnReplacePage" class="menuBtn">ReplacePage</button>
 			</div>
 
 			<textarea
@@ -267,6 +268,23 @@ Sochi
 	</div>
 </div>
 
+<!-- Поле для ReplacePage -->
+<div class="wrapperListOfReplacePage">
+	<div class="headeR">
+		ReplacePage
+		<div id="hide_menu">–</div>
+	</div>
+	<div class="jquery-menu">
+		<div class="listOfReplacePageInputWrap">
+			<input class="listOfReplacePage inpFirstTextReplacePage" type="text" name="listOfReplacePageFirstText" placeholder="Что менять" />
+			<textarea class="listOfReplacePageTextArea inpSecondTextReplacePage" name="listOfReplaceAllSecondText" cols="30" rows="10" placeholder="На каких страницах и на что менять каждый с новой строки"></textarea>
+		</div>
+		<div class="btnFormReplacePageWrapper">
+			<button class="btnFormReplacePage">Выполнить</button>
+		</div>
+	</div>
+</div>
+
 <!-- Здесь HTML код спиннера -->
 <div id="spinner" style="display: none">
 	<div class="loader">
@@ -393,7 +411,8 @@ Sochi
 	.wrapperListOfCapital,
 	.wrapperListOfTitleSuffix,
 	.wrapperListOfLink,
-	.wrapperListOfReplaceAll
+	.wrapperListOfReplaceAll,
+	.wrapperListOfReplacePage
 	 {
 		background-color: #fff;
 		display: none;
@@ -434,7 +453,8 @@ Sochi
 	.wrapperListOfCapital.active,
 	.wrapperListOfTitleSuffix.active,
 	.wrapperListOfLink.active,
-	.wrapperListOfReplaceAll.active {
+	.wrapperListOfReplaceAll.active,
+	.wrapperListOfReplacePage.active {
 		display: block;
 	}
 
@@ -955,6 +975,38 @@ Sochi
 	.btnFormReplaceAll {
 	}
 
+	/* Стили для формы ReplacePage */
+	.wrapperListOfReplacePage {
+		width: 500px;
+		top: calc(var(--center-menu-height) + 22px);
+		left: calc(50% - 367px);
+		z-index: 999;
+	}
+	.listOfReplacePageInputWrap {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		padding: 5px;
+	}
+	.listOfReplacePage {
+		width: 100%;
+		height: 30px;
+		padding: 0 10px;
+	}
+	.listOfReplacePageTextArea{
+		padding: 5px 10px;
+	}
+	.inpFirstText {
+	}
+	.inpSecondText {
+	}
+	.btnFormReplacePageWrapper {
+		border-top: 1px solid #767676 !important;
+		margin: 0 5px;
+	}
+	.btnFormReplacePage {
+	}
+
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
@@ -979,7 +1031,8 @@ Sochi
 	.btnFormImgWrapper,
 	.btnFormTitleSuffixWrapper,
 	.btnFormLinkWrapper,
-	.btnFormReplaceAllWrapper {
+	.btnFormReplaceAllWrapper,
+	.btnFormReplacePageWrapper {
 		text-align: right;
 		padding: 5px;
 		border: 1px solid #767676;
@@ -991,7 +1044,9 @@ Sochi
 	.btnFormImg,
 	.btnFormTitleSuffix,
 	.btnFormLink,
-	.btnFormReplaceAll {
+	.btnFormReplaceAll,
+	.btnFormReplacePage
+	 {
 		border: none;
 		border-radius: 2px;
 		font-weight: 700;
@@ -1005,7 +1060,9 @@ Sochi
 	.btnFormImg:hover,
 	.btnFormTitleSuffix:hover,
 	.btnFormLink:hover,
-	.btnFormReplaceAll:hover {
+	.btnFormReplaceAll:hover,
+	.btnFormReplacePage:hover
+	 {
 		background: #198754;
 	}
 </style>

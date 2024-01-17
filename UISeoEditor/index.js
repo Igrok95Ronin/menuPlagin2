@@ -23,7 +23,7 @@ document.addEventListener('click', function (e) {
 
 	if (e.target.closest('#submit-buttonPlagin')) {
 		const menu = document.querySelector(
-			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
+			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll .wrapperListOfReplacePage'
 		)
 		menu.classList.add('active') //не скрывать форму при повторном нажатии
 	}
@@ -34,7 +34,7 @@ document.addEventListener('keyup', function (e) {
 	if (e.ctrlKey && e.code === 'KeyZ') {
 		const rightMenu = document.querySelector('.jquery-right-menu')
 		const otherMenus = document.querySelectorAll(
-			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
+			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage'
 		)
 
 		if (!rightMenu) {
@@ -50,6 +50,7 @@ document.addEventListener('keyup', function (e) {
 		modul.showFormTitleSuffix() // Показать поле TitleSuffix
 		modul.showFormLink() // Показать Форму Link
 		modul.showFormReplaceAll() // Показать форму ReplaceAll
+		modul.showFormReplacePage() // Показать форму ReplacePage
 
 		if (rightMenu.classList.contains('active')) {
 			// Если jquery-right-menu активен, то выполняем ваш код
@@ -212,7 +213,7 @@ let offsetY = 0
 document.addEventListener('mousedown', e => {
 	if (e.target.classList.contains('headeR')) {
 		draggedElement = e.target.closest(
-			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll'
+			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage'
 		)
 		const rect = draggedElement.getBoundingClientRect()
 		offsetX = e.clientX - rect.left
@@ -402,7 +403,7 @@ document.addEventListener('click', function (event) {
 
 		// Получает имя хоста динамически
 		const hostName = window.location.hostname
-
+		
 		// Получение порта из URL, если он предоставлен, иначе используется порт по умолчанию 8080
 		const port = window.location.port || '8080'
 
@@ -416,8 +417,11 @@ document.addEventListener('click', function (event) {
 		}
 
 		// Динамически создает URL веб-сокета
-		window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`) //lock
-		// window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
+		if(hostName == "localhost"){
+			window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpoint`) //lock
+		}else {
+			window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpoint`); //web
+		}
 
 		window.socket.addEventListener('open', event => {
 			console.log('Открытие веб-сокета:', event)
@@ -982,6 +986,18 @@ document.addEventListener('click', function (event) {
 		}
 	}
 
+		// Функция для показа формы ReplacePage
+		function showFormReplacePage() {
+			const btnReplacePage = document.querySelector('#btnReplacePage'),
+			wrapperListOfReplacePage = document.querySelector('.wrapperListOfReplacePage')
+	
+			if (btnReplacePage) {
+				btnReplacePage.addEventListener('click', function () {
+					wrapperListOfReplacePage.classList.toggle('active')
+				})
+			}
+		}
+
 	// Обработчик для кнопок фильтрации
 	document.body.addEventListener('click', function () {
 		document.querySelectorAll('.exclusionButtons').forEach(button => {
@@ -1091,6 +1107,7 @@ document.addEventListener('click', function (event) {
 		showFormTitleSuffix,
 		showFormLink,
 		showFormReplaceAll,
+		showFormReplacePage,
 		createsAnObjectWithPicturesAndInputValue,
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
@@ -1112,6 +1129,12 @@ document.addEventListener('click', e => {
 		singleRequest.addLink()
 	} else if (e.target.matches('.btnFormReplaceAll')){
 		singleRequest.replaceAll()
+	} else if (e.target.matches('.btnFormReplacePage')){
+		try{
+			singleRequest.replacePage.getReplacePage()
+		}catch (error) {
+			console.log("Исключительная ситуация обработана: " + error)
+		}
 	}
 })
 
@@ -1418,12 +1441,81 @@ document.addEventListener('click', e => {
 		}
 	}
 
+	// Заменить название города на определенных страница на другое название города и ReplacePage
+	class ReplacePage {
+		firstText;
+		secondText;
+		region;
+		service;
+
+		constructor(firstText, secondText, region, service){
+			this.firstText = firstText
+			this.secondText = secondText
+			this.region = region
+			this.service = service
+		}
+
+		getReplacePage(){
+			let firstInpText = document.querySelector(this.firstText),
+			secondInpText = document.querySelector(this.secondText);
+			try{
+				firstInpText = firstInpText.value,
+				secondInpText = secondInpText.value;
+			}catch (error) {
+				throw new Error("Ошибка при доступке к Dom елементам: " + error)
+			}
+
+
+			const firstInpTextTrim = firstInpText.trim(),
+				secondInpTextTrim = secondInpText.trim();
+
+			if(firstInpTextTrim && secondInpTextTrim){
+				spinner(true) // Активируем спиннер
+
+				const data = {
+					firstInpTextTrim: firstInpTextTrim,
+					secondInpTextTrim: secondInpTextTrim,
+					region: this.region,
+					service: this.service
+				}
+
+				const jsonData = JSON.stringify(data)// Создаем JSON
+
+				this.getFetch(jsonData)
+		
+			}
+		}
+		getFetch(jsonData){
+			fetch('/replacepagehandler', {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: jsonData,
+			}).then(response => {
+				if(!response.ok) {
+					throw new Error("Ошибка при отправке запроса на сервер " + response.statusText)
+				}
+			}).catch(error => {
+				console.log('Что-то пошло не так при отправке данных на сервер в функции replacepagehandler: ', error)
+			}).finally(() => {
+				spinner(false)// Отключаем спиннер в любом случае
+			})
+		}
+	}
+
+	const replacePage  = new ReplacePage(".inpFirstTextReplacePage",".inpSecondTextReplacePage", region, service)
+
+	
+	
+
 	window.singleRequest = {
 		makesTextBold,
 		makesTextCapital,
 		changesAltTagsOfImages,
 		addTitleSuffix,
 		addLink,
-		replaceAll
+		replaceAll,
+		replacePage,
 	}
 })()
