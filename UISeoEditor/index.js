@@ -526,67 +526,76 @@ document.addEventListener('click', function (event) {
 
 	// Функция showPagesInPageBlockPlagin вызывается для отправки запроса на сервер и получения данных о страницах
 	function showPagesInPageBlockPlagin() {
+		let startTime = performance.now();
 		if (region && service) {
-			// Создаем объект с данными, которые хотим отправить
 			var dataToSend = {
 				region: region,
 				service: service,
-			}
-
-			// Выполняем POST-запрос к серверу с JSON в теле
+			};
+	
 			fetch('/showpagesinpageblockplagin', {
-				method: 'POST', // Метод запроса
+				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json', // Тип контента - JSON
+					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(dataToSend), // Преобразовываем объект в строку JSON
+				body: JSON.stringify(dataToSend),
 			})
-				.then(response => response.json()) // Парсим ответ сервера из JSON
-				.then(data => {
-					// Проверяем, есть ли поле 'error' в ответе
-					if (data.error) {
-						// Обрабатываем ошибку, если она есть
-						// console.error('Страницы не найдены:', data.message);
-					} else {
-						// Если ошибки нет, обрабатываем данные
-						const pages_list_item = document.querySelector('.pages_list_item')
-						const total_pages = document.querySelector('.total_pages')
-						const btnDeleteAllPages = document.querySelector('.deleteAllPages')
-						const styleSitemap = document.querySelector('.styleSitemap')
-
-						total_pages.textContent = data.total_files
-
-						// Показывать или скрывать кнопку Удалить все
-						if (+total_pages.textContent > 0) {
-							btnDeleteAllPages.style.display = 'block'
-							styleSitemap.style.display = 'inline-block'
-						} else {
-							btnDeleteAllPages.style.display = 'none'
-							styleSitemap.style.display = 'none'
-						}
-
-						pages_list_item.innerHTML = ''
-						data.files_with_html.forEach((link, i) => {
-							pages_list_item.innerHTML += `
-                        <div class = 'pageWrapper'>
-                            <a class = 'linkPage' href = '${url}pages/${link}' target='_blank'>${data.files_without_html[
-								i
-							].toUpperCase()}</a>
-                            <button class = 'deletePage' data-link='${link}'>X</button>
-                        </div>`
-						})
-						deletePage(region, service)
-					}
-				})
-				.catch(error => {
-					// Ловим и выводим в консоль любые ошибки
-					// console.error('Ошибка:', error);
-				})
+			.then(response => response.json())
+			.then(data => {
+				if (data.error) {
+					console.error('Страницы не найдены:', data.message);
+				} else {
+					const pages_list_item = document.querySelector('.pages_list_item');
+					const total_pages = document.querySelector('.total_pages');
+					const btnDeleteAllPages = document.querySelector('.deleteAllPages');
+					const styleSitemap = document.querySelector('.styleSitemap');
+	
+					total_pages.textContent = data.total_files;
+	
+					btnDeleteAllPages.style.display = +total_pages.textContent > 0 ? 'block' : 'none';
+					styleSitemap.style.display = +total_pages.textContent > 0 ? 'inline-block' : 'none';
+	
+					const fragment = document.createDocumentFragment();
+					data.files_with_html.forEach((link, i) => {
+						const div = document.createElement('div');
+						div.className = 'pageWrapper';
+	
+						const a = document.createElement('a');
+						a.className = 'linkPage';
+						a.href = `${url}pages/${link}`;
+						a.target = '_blank';
+						a.textContent = data.files_without_html[i].toUpperCase();
+						div.appendChild(a);
+	
+						const button = document.createElement('button');
+						button.className = 'deletePage';
+						button.dataset.link = link;
+						button.textContent = 'X';
+						div.appendChild(button);
+	
+						fragment.appendChild(div);
+					});
+	
+					pages_list_item.innerHTML = '';
+					pages_list_item.appendChild(fragment);
+	
+					deletePage(region, service);
+	
+					let endTimer = performance.now();
+					let timeTaken = (endTimer - startTime) / 1000;
+					console.log(timeTaken);
+				}
+			})
+			.catch(error => {
+				console.error('Ошибка:', error);
+			});
 		} else {
-			// Если переменные region или service не определены
-			console.log(region, service + ' не найдены')
+			console.log(region, service + ' не найдены');
 		}
 	}
+	
+
+	
 
 	// Удалить одну страницу
 	function deletePage(region, service) {
