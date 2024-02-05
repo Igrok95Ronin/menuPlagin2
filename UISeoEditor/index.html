@@ -98,6 +98,7 @@ Sochi
 				<button id="btnAddLink" class="menuBtn">Link</button>
 				<button id="btnReplaceAll" class="menuBtn">ReplaceAll</button>
 				<button id="btnReplacePage" class="menuBtn">ReplacePage</button>
+				<button id="btnAnalysis" class="menuBtn">Analysis</button>
 			</div>
 
 			<textarea
@@ -285,6 +286,33 @@ Sochi
 	</div>
 </div>
 
+
+<!-- Поле для Analysis -->
+<div class="wrapperListOfAnalysis">
+	<div class="headeR">
+		Analysis
+		<div id="hide_menu">–</div>
+	</div>
+	<div class="jquery-menu analysisWrapper">
+		<div class="listOfAnalysisInputWrap">
+			<fieldset class="fildsetAnalysis">
+				<label class="onlyIndex" for="indexCheckAnalysis">Только index</label>
+				<input class="indexCheckAnalysis" id="indexCheckAnalysis"  type="checkbox" name="indexCheck">
+
+				<label class="onlyIndex enableLink" for="enableLinkAnalysis">Включить анализ по ссылкам</label>
+				<input class="enableLinkAnalysis" id="enableLinkAnalysis"  type="checkbox" name="enableLink">
+			</fieldset>
+		</div>
+		<div class="analysisLogs"></div>
+		<div class="btnFormAnalysisWrapper">
+			<button class="btnFormAnalysisClear numberOfPagesWithErrors" disabled>Количество страниц с ошибками: <span>0</span></button>
+			<button class="btnFormAnalysisStop">Стоп</button>
+			<button class="btnFormAnalysisClear">Очистить</button>
+			<button class="btnFormAnalysis">Выполнить</button>
+		</div>
+	</div>
+</div>
+
 <!-- Здесь HTML код спиннера -->
 <div id="spinner" style="display: none">
 	<div class="loader">
@@ -412,7 +440,8 @@ Sochi
 	.wrapperListOfTitleSuffix,
 	.wrapperListOfLink,
 	.wrapperListOfReplaceAll,
-	.wrapperListOfReplacePage
+	.wrapperListOfReplacePage,
+	.wrapperListOfAnalysis
 	 {
 		background-color: #fff;
 		display: none;
@@ -454,7 +483,8 @@ Sochi
 	.wrapperListOfTitleSuffix.active,
 	.wrapperListOfLink.active,
 	.wrapperListOfReplaceAll.active,
-	.wrapperListOfReplacePage.active {
+	.wrapperListOfReplacePage.active,
+	.wrapperListOfAnalysis.active {
 		display: block;
 	}
 
@@ -1007,6 +1037,98 @@ Sochi
 	.btnFormReplacePage {
 	}
 
+	/* Стили для формы Analysis */
+	.wrapperListOfAnalysis {
+		width: 100%;
+		max-width: 1000px;
+		top: calc(var(--center-menu-height) + -260px);
+		left: calc(50% - 435px);
+		z-index: 9999;
+		margin: 0 10px;
+	}
+	.analysisWrapper{
+		padding: 5px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.headeR {
+	}
+	.jquery-menu {
+	}
+	.listOfAnalysisInputWrap {
+	}
+	.fildsetAnalysis {
+		display: flex;
+	    gap: 3px;
+		margin: 0;
+		padding: 0;
+	}
+	.onlyIndex {
+		cursor: pointer;
+		font-weight: 700;
+		padding: 3px;
+		border: 2px solid transparent;
+		transition: .3s;
+	}
+	.onlyIndex:hover {
+		border: 2px solid #817d9a;
+		padding: 3px;
+		border-radius: 3px;
+	}
+	.analysisLogs{
+		display: grid;
+   		gap: 20px;
+		padding: 5px;
+		border: 1px solid #767676;
+		border-radius: 3px;
+		min-height: 300px;
+		max-height: 500px;
+		overflow: auto;
+	}
+	.analysisLogsPageError{
+		border-radius: 2px;
+		border: 2px solid #a90a0a;
+		padding: 3px;
+	}
+	.indexCheckAnalysis {
+	}
+	.btnFormAnalysisWrapper {
+    border: 1px solid #767676 !important;
+	}
+	.btnFormAnalysisClear,
+	.btnFormAnalysisStop {
+		background-color: #eb4949 !important;
+	}
+	.btnFormAnalysisClear:hover,
+	.btnFormAnalysisStop:hover {
+		background-color: #dd3636 !important;
+	}
+	.btnFormAnalysis {
+	}
+	.analysisLogsLink{
+		font-size: 20px;
+		font-weight: 700;
+		padding: 3px 3px 10px;
+	}
+	.analysisLogsError{
+		margin-bottom: 5px;
+		color: chocolate;
+		font-weight: 600;
+		font-size: 16px;
+		padding-left: 3px;
+
+	}
+	.analysisLogsRecomended{
+		margin-bottom: 10px;
+		font-size: 16px;
+		font-weight: 700;
+		color: green;
+		padding-left: 3px;
+
+	}
+	
+
 	/* Logs btn */
 	.headerLogs {
 		display: grid;
@@ -1032,7 +1154,8 @@ Sochi
 	.btnFormTitleSuffixWrapper,
 	.btnFormLinkWrapper,
 	.btnFormReplaceAllWrapper,
-	.btnFormReplacePageWrapper {
+	.btnFormReplacePageWrapper,
+	.btnFormAnalysisWrapper {
 		text-align: right;
 		padding: 5px;
 		border: 1px solid #767676;
@@ -1045,7 +1168,10 @@ Sochi
 	.btnFormTitleSuffix,
 	.btnFormLink,
 	.btnFormReplaceAll,
-	.btnFormReplacePage
+	.btnFormReplacePage,
+	.btnFormAnalysis,
+	.btnFormAnalysisClear,
+	.btnFormAnalysisStop
 	 {
 		border: none;
 		border-radius: 2px;
@@ -1061,8 +1187,12 @@ Sochi
 	.btnFormTitleSuffix:hover,
 	.btnFormLink:hover,
 	.btnFormReplaceAll:hover,
-	.btnFormReplacePage:hover
+	.btnFormReplacePage:hover,
+	.btnFormAnalysis:hover
 	 {
 		background: #198754;
 	}
+
+	/* Logs Analysis */
+	
 </style>

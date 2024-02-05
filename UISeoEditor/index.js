@@ -23,7 +23,7 @@ document.addEventListener('click', function (e) {
 
 	if (e.target.closest('#submit-buttonPlagin')) {
 		const menu = document.querySelector(
-			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll .wrapperListOfReplacePage'
+			'.jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage, .wrapperListOfAnalysis'
 		)
 		menu.classList.add('active') //не скрывать форму при повторном нажатии
 	}
@@ -34,7 +34,7 @@ document.addEventListener('keyup', function (e) {
 	if (e.ctrlKey && e.code === 'KeyZ') {
 		const rightMenu = document.querySelector('.jquery-right-menu')
 		const otherMenus = document.querySelectorAll(
-			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage'
+			'.jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage, .wrapperListOfAnalysis'
 		)
 
 		if (!rightMenu) {
@@ -51,6 +51,7 @@ document.addEventListener('keyup', function (e) {
 		modul.showFormLink() // Показать Форму Link
 		modul.showFormReplaceAll() // Показать форму ReplaceAll
 		modul.showFormReplacePage() // Показать форму ReplacePage
+		modul.showFormAnalysise() // Показать форму Analysise
 
 		if (rightMenu.classList.contains('active')) {
 			// Если jquery-right-menu активен, то выполняем ваш код
@@ -213,7 +214,7 @@ let offsetY = 0
 document.addEventListener('mousedown', e => {
 	if (e.target.classList.contains('headeR')) {
 		draggedElement = e.target.closest(
-			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage'
+			'.jquery-right-menu, .jquery-center-menu, .jquery-logs-menu, .wrapperListOfAltTags, .wrapperListOfStrong, .wrapperListOfCapital, .wrapperListOfTitleSuffix, .wrapperListOfLink, .wrapperListOfReplaceAll, .wrapperListOfReplacePage, .wrapperListOfAnalysis'
 		)
 		const rect = draggedElement.getBoundingClientRect()
 		offsetX = e.clientX - rect.left
@@ -1007,6 +1008,19 @@ document.addEventListener('click', function (event) {
 			}
 		}
 
+		// Функция для показа формы Analysis
+		function showFormAnalysise() {
+			const btnAnalysis = document.querySelector('#btnAnalysis'),
+			wrapperListOfAnalysis = document.querySelector('.wrapperListOfAnalysis')
+	
+			if (btnAnalysis) {
+				btnAnalysis.addEventListener('click', function () {
+					wrapperListOfAnalysis.classList.toggle('active')
+					// Активируем Websocket для анализа страниц
+					singleRequest.analysis.getInitiateWebSocketAnalysis()
+				})
+			}
+		}		
 	// Обработчик для кнопок фильтрации
 	document.body.addEventListener('click', function () {
 		document.querySelectorAll('.exclusionButtons').forEach(button => {
@@ -1117,6 +1131,7 @@ document.addEventListener('click', function (event) {
 		showFormLink,
 		showFormReplaceAll,
 		showFormReplacePage,
+		showFormAnalysise,
 		createsAnObjectWithPicturesAndInputValue,
 		handlerForFilterButtons, // Обработчик для кнопок фильтрации
 		searchPages, // Поиск страниц
@@ -1142,12 +1157,25 @@ document.addEventListener('click', e => {
 		try{
 			singleRequest.replacePage.getReplacePage()
 		}catch (error) {
-			console.log("Исключительная ситуация обработана: " + error)
+			console.log("Исключительная ситуация обработана: " , error)
 		}
+	} else if (e.target.matches('.btnFormAnalysis')) {
+		try{
+			singleRequest.analysis.getAnalysis()
+		}catch (error) {
+			console.log("Исключительная ситуация обработана: ", error)
+		}
+	} else if (e.target.matches('.btnFormAnalysisClear')){
+		singleRequest.analysis.getAnalysisClear() // Очитска формы анализа
+	} else if (e.target.matches('.btnFormAnalysisStop')) {
+		singleRequest.analysis.getAnalysisStop() // Стоп Анализ
 	}
 })
 
+
+
 !(function () {
+
 	// Получаем текущий url
 	var baseUrl = window.location.origin // Начальный домен, например "https://example.com"
 	var url = window.location.href // Получаем текущий URL
@@ -1512,8 +1540,280 @@ document.addEventListener('click', e => {
 			})
 		}
 	}
-
 	const replacePage  = new ReplacePage(".inpFirstTextReplacePage",".inpSecondTextReplacePage", region, service)
+
+	// Делает анализ страниц сайта Analysis
+	window.isNewRequest = false // глобальная переменная для отслеживания нового запроса
+	
+	class Analysis {
+		region;
+		nameSite;
+		indexCheckbox;
+		analysisLogs;
+		numberOfPagesWithErrors; // Количество страниц с ошибками
+		enableLink; // Значения чекбокса для ссылок
+		analysisLogsLink; // Название страницы с Ошибками
+
+		constructor(region,nameSite, indexCheckbox, analysisLogs, numberOfPagesWithErrors, enableLink, analysisLogsLink) {
+			this.region = region
+			this.nameSite = nameSite
+			this.indexCheckbox = indexCheckbox
+			this.analysisLogs = analysisLogs
+			this.numberOfPagesWithErrors = numberOfPagesWithErrors
+			this.enableLink = enableLink
+			this.analysisLogsLink = analysisLogsLink
+		}
+
+		getAnalysis() {
+			const indexCheckbox = document.querySelector(this.indexCheckbox),
+				enableLink = document.querySelector(this.enableLink);
+
+			let check = false,
+				linkCheck = false;
+			try{
+				if(indexCheckbox.checked){
+					check = true //Если чек поставлен делаем его true
+				}
+				spinner(true) // Активируем спиннер
+			}catch (errot) {
+				throw new Error("Ошибка при доступке к Dom елементам: indexCheckbox")
+			}
+
+			try {
+				if(enableLink.checked){
+					linkCheck = true
+				}
+				spinner(true) // Активируем спиннер
+			} catch (error) {
+				throw new Error("Ошибка при доступке к Dom елементам: enableLink")
+			}
+
+
+			
+			const data = {
+				region: this.region,
+				nameSite: this.nameSite,
+				indexCheckbox: check,
+				url: url,
+				linkCheck: linkCheck,
+			}
+			const jsonData = JSON.stringify(data) // Переобразовываем в json
+
+			this.getFetch(jsonData)
+		}
+
+		getFetch(jsonData){
+
+			fetch('/analysishandler', {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json', // Тип контента - JSON
+				},
+				body: jsonData
+			}).then(response => {
+				if(!response.ok){
+					throw new Error("Ошибка при отправке запроса на сервер " + response.statusText)
+				}
+			}).catch(error => {
+				console.log('Что-то пошло не так при отправке данных на сервер в функции analysishandler: ', error)
+			}).finally(() => {
+				spinner(false)
+			})
+			this.getSendNewRequestAnalysis() // Инициализация нового запроса websocket
+
+		}
+
+		getInitiateWebSocketAnalysis(){
+			// Указывает, используется ли безопасное соединение
+			const isSecure = window.location.protocol === 'https:'
+
+			// Получает имя хоста динамически
+			const hostName = window.location.hostname
+			
+			// Получение порта из URL, если он предоставлен, иначе используется порт по умолчанию 8080
+			const port = window.location.port || '8080'
+
+			// Устанавливает протокол в зависимости от того, является ли соединение безопасным
+			const protocol = isSecure ? 'wss' : 'ws'
+			console.log(protocol, hostName, port)
+
+			// Закрыть сокет ws-endpointanalysis, если он открыт и есть идентификатор
+			if (window.socket && window.socket.endpointType === 'analysis') {
+				// Закрыть сокет ws-endpointanalysis, если он открыт
+				if (window.socket.readyState === WebSocket.OPEN) {
+					window.socket.close();
+				}
+			}
+
+			// Динамически создает URL веб-сокета
+			if(hostName == "localhost"){
+				window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpointanalysis`) //lock
+				window.socket.endpointType = 'analysis'; // Установка идентификатора сокета по этому индентификатору можно обрашаться к конкретному сокету
+
+			}else {
+				window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpointanalysis`); //web
+				window.socket.endpointType = 'analysis'; // Установка идентификатора сокета по этому индентификатору можно обрашаться к конкретному сокету
+			}
+
+			window.socket.addEventListener('open', event => {
+				console.log('Открытие веб-сокета:', event)
+			})
+		
+			window.socket.addEventListener('error', event => {
+				console.error('Ошибка веб-сокета:', event)
+			})
+
+			// let flage = false // Флаг который аварийно завершает ws
+			window.socket.addEventListener('message', event => {
+				const analysisLogs = document.querySelector(this.analysisLogs);
+				if (analysisLogs) {
+					if (window.isNewRequest) {
+						analysisLogs.innerHTML = '' // Используйте внутренний HTML вместо значения
+						window.isNewRequest = false
+					}
+
+					//test
+					// console.log(event.data)
+					// Получаем и выводим на страницу данные из сервера полученные через WS
+					try{
+						let obj = JSON.parse(event.data) // Распарсим json
+						
+						const divPageError = document.createElement('div') // Создаем div контайнер
+
+						// Проверяем есть ли какая либа ошибка
+						if(obj.title != "" || obj.description != "" || obj.h1 != ""){
+
+							if(obj.namePage == "404.html" || obj.namePage == "sitemap.html"){
+								return // Не выводим эти страницы
+							}
+
+							divPageError.className = "analysisLogsPageError" // Добавляем класс для контайнера
+							analysisLogs.appendChild(divPageError)
+
+							if(obj.namePage == 'index.html'){
+								divPageError.innerHTML += `<a class="analysisLogsLink flush__edit" href='./' target='_blank'>${obj.namePage}</a><br>`
+							}else {
+								divPageError.innerHTML += `<a class="analysisLogsLink flush__edit" href='pages/${obj.namePage}' target='_blank'>${obj.namePage}</a><br>`
+							}
+						}
+
+						// Проверяем ошибка на Title
+						if(obj.title != ""){
+							divPageError.innerHTML += `<p class="analysisLogsError"> Некорректная длина Title ${obj.title.length} символов: ${obj.title}  </p>`
+							divPageError.innerHTML += `<p class="analysisLogsRecomended"> Рекомендуемая длина Title 45-80 символов с пробелами </p>`
+						}
+
+						// Проверяем ошибка на Description
+						if(obj.description != "") {
+							divPageError.innerHTML += `<p class="analysisLogsError"> Некорректная длина Description ${this.getLengthWithoutSpaces(obj.description)} символов: ${obj.description}  </p>`
+							divPageError.innerHTML += `<p class="analysisLogsRecomended"> Рекомендуемая длина Description 160-290 символов без пробелов </p>`
+						}
+
+						// Проверяем ошибка на H1
+						if(obj.h1 != "") {
+							divPageError.innerHTML += `<p class="analysisLogsError"> Некорректная длина h1 ${obj.h1.length} символов: ${obj.h1}  </p>`
+							divPageError.innerHTML += `<p class="analysisLogsRecomended"> Рекомендуемая длина h1 20-70 символов с пробелами </p>`
+						}
+
+						// Сравнение H1 и Title
+						if(obj.duplicatesH1Title != ""){
+							divPageError.innerHTML += `<p class="analysisLogsError"> Title дублирует H1: ${obj.duplicatesH1Title} : ${obj.duplicatesH1Title} </p>`
+							divPageError.innerHTML += `<p class="analysisLogsRecomended"> Рекомендуем дополнить Title текущая длина ${obj.duplicatesH1Title.length} символов, рекомендуемая длина 45-80 символов с пробелами </p>`
+						}
+
+						// Проверяем на кириллицу
+						if(obj.cyrillic != ""){
+							divPageError.innerHTML += `<p class="analysisLogsError"> Найдено слово на кириллице: ${obj.cyrillic} </p>`
+						}
+
+						// Проверяем битые ссылки
+						if(obj.allLinks != ""){
+							divPageError.innerHTML += `<p class="analysisLogsError"> Найдена битая ссылка: <a href='${obj.allLinks}' target='_blank'>${obj.allLinks}</a> </p>`
+						}
+
+
+						//Количество страниц с ошибками
+						const numberOfPagesWithErrors = document.querySelectorAll('.analysisLogsPageError').length
+						this.getNumberOfPagesWithErrors(numberOfPagesWithErrors)
+
+						// // Если получить повторно название страницы то ws аварийно завершится
+						// if(this.getNamePageError() == obj.namePage){
+						// 	if(flage){
+						// 		flage = false
+						// 		 // Переинециилизируем ws ото приходится перезапускать вручную
+						// 		this.getAnalysisStop()
+						// 	} else{
+						// 		flage = true
+						// 	}
+						// }
+
+
+					}catch(error){
+						console.log("Ошибка при разборе JSON:", error)
+						spinner(false)
+					}
+	
+					// Добавьте новый HTML-контент. Убедитесь, что он очищен, чтобы предотвратить XSS-атаки.
+					// analysisLogs.innerHTML += event.data // Добавление разрыва строки с помощью <br>
+		
+					// Автоматическая прокрутка вниз
+					// logsList.scrollTop = logsList.scrollHeight
+				} else {
+					console.error('Log container not found!')
+				}
+			})
+
+			window.socket.addEventListener('close', event => {
+				console.log('Вебсокет закрыт:', event)
+		
+				// Переподключение через 1 секунд после закрытия
+				// setTimeout(this.getInitiateWebSocketAnalysis(), 30000)
+			})
+		}
+
+		getSendNewRequestAnalysis(){ // Инициализация нового запроса
+			window.isNewRequest = true // установите этот флаг перед отправкой нового запроса
+			// ваш код для отправки нового запроса через WebSocket
+			if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+				// window.socket.send("Your new request data here");
+			}
+		}
+
+		getLengthWithoutSpaces(str){// Проверяет длину строки без пробелов, табуляций и переносов строк
+			// Удаление пробелов, табуляций и переносов строк
+    		var cleanedStr = str.replace(/\s/g, '');
+    		return cleanedStr.length;
+		}
+
+		getAnalysisClear(){ // Очитска формы анализа
+			const analysisLogs = document.querySelector(this.analysisLogs),
+			numberOfPagesWithErrors = document.querySelector(`${this.numberOfPagesWithErrors} > span`);
+			if(analysisLogs){
+				analysisLogs.textContent = ""
+				numberOfPagesWithErrors.textContent = 0
+			}
+		}
+
+		getNumberOfPagesWithErrors(numberOfPagesWithErrors){ //Количество страниц с ошибками
+			document.querySelector(`${this.numberOfPagesWithErrors} > span`).textContent = numberOfPagesWithErrors
+		}
+
+		getAnalysisStop(){ // Остановить Анализ
+			if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+				window.socket.send('stop');
+			}
+			// this.getInitiateWebSocketAnalysis()
+		}
+
+		// getNamePageError(){ // Название страницы с ошибкой
+		// 	const namePageErr = document.querySelector(this.analysisLogsLink)
+		// 	if(namePageErr){
+		// 		return namePageErr.textContent
+		// 	}
+		// }
+	}
+
+	const analysis = new Analysis(region, service, ".indexCheckAnalysis", ".analysisLogs", ".numberOfPagesWithErrors", ".enableLinkAnalysis", ".analysisLogsLink")
 
 	
 	
@@ -1526,5 +1826,6 @@ document.addEventListener('click', e => {
 		addLink,
 		replaceAll,
 		replacePage,
+		analysis,
 	}
 })()
