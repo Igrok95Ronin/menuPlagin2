@@ -853,6 +853,13 @@ document.addEventListener('click', function (event) {
 		if (btnAddStrong) {
 			btnAddStrong.addEventListener('click', function () {
 				wrapperListOfStrong.classList.toggle('active')
+				singleRequest.initiateWebSocket()
+				// При клике на кнопку стронг удаляем форму логов
+				const displayBlockLogs = document.querySelector('.displayBlockLogs')
+				if(displayBlockLogs){
+					displayBlockLogs.remove()
+				}
+
 			})
 		}
 	}
@@ -1210,7 +1217,10 @@ document.addEventListener('click', e => {
 		if (valueListOfStrongTrim) {
 			// Отображение индикатора загрузки и установка темного фона во время обработки запроса
 			spinner(true)
-
+			
+			// Блок с прочими логами
+			logsOther()
+			
 			// Объект с данными
 			const data = {
 				valueListOfStrongTrim: valueListOfStrongTrim, // Ключевые слова
@@ -1230,13 +1240,13 @@ document.addEventListener('click', e => {
 				.then(response => {
 					if (!response.ok) {
 						// Скрыть индикатора загрузки и темного фона во время обработки запроса
-						spinner(false)
+						// spinner(false)
 						throw new Error('Ошибка запроса' + response.statusText)
 					}
 					// return response.json() // Возвращаем если это необходимо
 
 					// Скрыть индикатора загрузки и темного фона во время обработки запроса
-					spinner(false)
+					// spinner(false)
 				})
 				.then(data => {
 					// Дополнительная обработка полученных данных
@@ -1246,7 +1256,108 @@ document.addEventListener('click', e => {
 						'Что-то пошло не так при отправке данных на сервер в функции makesTextBold: ',
 						error
 					)
+				}).finally(() => {
+					sendNewRequest()
+					// spinner(false)
 				})
+		}
+	}
+
+	window.isNewRequest = false // глобальная переменная для отслеживания нового запроса
+	
+	// Блок Прочих Логов
+	function logsOther(){
+		const displayBlockLogs = document.querySelector('.displayBlockLogs');
+		displayBlockLogs ? displayBlockLogs.remove() : undefined; // Если блок уже есть то удаляем его и создаем новый
+
+		const addFormOtherLogs = `
+		<div class="wrapperListOfStrong displayBlockLogs">
+			<div class="headeR">
+				Logs <span class="numberOfStrong"><!-- Количество Strong --></span>
+				<div id="hide_menu">–</div>
+			</div>
+			<div class="jquery-menu">
+				<div class="logsOther"></div>
+			</div>
+		</div>
+		`
+		document.body.insertAdjacentHTML('afterbegin', addFormOtherLogs);
+	}
+
+	// Функция для создания Вебсокит соединения LOGS
+	function initiateWebSocket() {
+		// Указывает, используется ли безопасное соединение
+		const isSecure = window.location.protocol === 'https:'
+
+		// Получает имя хоста динамически
+		const hostName = window.location.hostname
+		
+		// Получение порта из URL, если он предоставлен, иначе используется порт по умолчанию 8080
+		const port = window.location.port || '8080'
+
+		// Устанавливает протокол в зависимости от того, является ли соединение безопасным
+		const protocol = isSecure ? 'wss' : 'ws'
+		console.log(protocol, hostName, port)
+
+		// Если сокет уже открыт или открывается, не создаем новый
+		// if (window.socket && window.socket.readyState !== WebSocket.CLOSED) {
+		// 	return
+		// }
+
+		// Динамически создает URL веб-сокета
+		if(hostName == "localhost"){
+			window.socket = new WebSocket(`${protocol}://${hostName}:8080/ws-endpointotherlogs`) //lock
+		}else {
+			window.socket = new WebSocket(`${protocol}://${hostName}/ws-endpointotherlogs`); //web
+		}
+
+		window.socket.addEventListener('open', event => {
+			console.log('Открытие веб-сокета:', event)
+		})
+
+		window.socket.addEventListener('error', event => {
+			console.error('Ошибка веб-сокета:', event)
+		})
+
+		window.socket.addEventListener('message', event => {
+			const logsDiv = document.querySelector('.logsOther'),
+				logsList = document.querySelector('.logsOther')
+			if (logsDiv) {
+				if (window.isNewRequest) {
+					logsDiv.innerHTML = '' // Используйте внутренний HTML вместо значения
+					window.isNewRequest = false
+				}
+
+				// Добавьте новый HTML-контент. Убедитесь, что он очищен, чтобы предотвратить XSS-атаки.
+				logsDiv.innerHTML += "<p class='logsOtherData'>" + event.data + "</p>" // Добавление разрыва строки с помощью <br>
+
+				// Автоматическая прокрутка вниз
+				logsList.scrollTop = logsList.scrollHeight
+			} else {
+				console.error('Log container not found!')
+			}
+
+			// Убераем Спиннер
+			if(event.data == "FINISH"){
+				spinner(false)
+			}
+		})
+
+
+		window.socket.addEventListener('close', event => {
+			console.log('Вебсокет закрыт:', event)
+
+			// Переподключение через 1 секунд после закрытия
+			setTimeout(initiateWebSocket, 1)
+		})
+	}
+
+	// Функция для отправки нового запроса вебсокет
+	function sendNewRequest() {
+		window.isNewRequest = true // установите этот флаг перед отправкой нового запроса
+		// ваш код для отправки нового запроса через WebSocket
+		if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+			// window.socket.send("Your new request data here");
 		}
 	}
 
@@ -1445,7 +1556,7 @@ document.addEventListener('click', e => {
 			secondTextTrim = secondText.trim();
 
 			// Если поле не пустое то выполниться
-		if(firstTextTrim && secondTextTrim) {
+		if(firstTextTrim) {
 			spinner(true) // Активируем спиннер
 
 			// Создаем объект данных
@@ -1482,29 +1593,34 @@ document.addEventListener('click', e => {
 	class ReplacePage {
 		firstText;
 		secondText;
+		prefixUrl;
 		region;
 		service;
 
-		constructor(firstText, secondText, region, service){
+		constructor(firstText, secondText, prefixUrl, region, service){
 			this.firstText = firstText
 			this.secondText = secondText
 			this.region = region
 			this.service = service
+			this.prefixUrl = prefixUrl
 		}
 
 		getReplacePage(){
 			let firstInpText = document.querySelector(this.firstText),
-			secondInpText = document.querySelector(this.secondText);
+			secondInpText = document.querySelector(this.secondText),
+			prefixInpUrl = document.querySelector(this.prefixUrl);
 			try{
-				firstInpText = firstInpText.value,
+				firstInpText = firstInpText.value;
 				secondInpText = secondInpText.value;
+				prefixInpUrl = prefixInpUrl.value;
 			}catch (error) {
 				throw new Error("Ошибка при доступке к Dom елементам: " + error)
 			}
 
 
 			const firstInpTextTrim = firstInpText.trim(),
-				secondInpTextTrim = secondInpText.trim();
+				secondInpTextTrim = secondInpText.trim(),
+				prefixInpUrlTrim = prefixInpUrl.trim();
 
 			if(firstInpTextTrim && secondInpTextTrim){
 				spinner(true) // Активируем спиннер
@@ -1512,6 +1628,7 @@ document.addEventListener('click', e => {
 				const data = {
 					firstInpTextTrim: firstInpTextTrim,
 					secondInpTextTrim: secondInpTextTrim,
+					prefixInpUrlTrim: prefixInpUrlTrim,
 					region: this.region,
 					service: this.service
 				}
@@ -1540,7 +1657,7 @@ document.addEventListener('click', e => {
 			})
 		}
 	}
-	const replacePage  = new ReplacePage(".inpFirstTextReplacePage",".inpSecondTextReplacePage", region, service)
+	const replacePage  = new ReplacePage(".inpFirstTextReplacePage",".inpSecondTextReplacePage", ".inpPrefixUrlReplacePage", region, service)
 
 	// Делает анализ страниц сайта Analysis
 	window.isNewRequest = false // глобальная переменная для отслеживания нового запроса
@@ -1827,5 +1944,6 @@ document.addEventListener('click', e => {
 		replaceAll,
 		replacePage,
 		analysis,
+		initiateWebSocket,
 	}
 })()

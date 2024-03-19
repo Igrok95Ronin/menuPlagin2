@@ -278,6 +278,7 @@ Sochi
 	<div class="jquery-menu">
 		<div class="listOfReplacePageInputWrap">
 			<input class="listOfReplacePage inpFirstTextReplacePage" type="text" name="listOfReplacePageFirstText" placeholder="Что менять" />
+			<input class="listOfReplacePage inpPrefixUrlReplacePage" type="text" name="listOfReplacePagePrefixUrl" placeholder="Префикс для Url" />
 			<textarea class="listOfReplacePageTextArea inpSecondTextReplacePage" name="listOfReplaceAllSecondText" cols="30" rows="10" placeholder="На каких страницах и на что менять каждый с новой строки"></textarea>
 		</div>
 		<div class="btnFormReplacePageWrapper">
@@ -1194,5 +1195,23 @@ Sochi
 	}
 
 	/* Logs Analysis */
+
+	/* Logs Other */
+	.displayBlockLogs{
+		display: block;
+		z-index: 9999;
+		width: 500px;
+		top: calc(var(--center-menu-height) + -41px);
+		left: calc(50% - 360px);
+	}
+	.logsOther{
+		height: 200px;
+		padding: 10px;
+		overflow: auto;
+	}
+	.logsOtherData{
+		font-weight: 700;
+    	color: blueviolet;
+	}
 	
 </style>
