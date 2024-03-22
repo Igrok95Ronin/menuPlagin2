@@ -1003,31 +1003,38 @@ document.addEventListener('click', function (event) {
 		}
 	}
 
-		// Функция для показа формы ReplacePage
-		function showFormReplacePage() {
-			const btnReplacePage = document.querySelector('#btnReplacePage'),
-			wrapperListOfReplacePage = document.querySelector('.wrapperListOfReplacePage')
-	
-			if (btnReplacePage) {
-				btnReplacePage.addEventListener('click', function () {
-					wrapperListOfReplacePage.classList.toggle('active')
-				})
-			}
-		}
+	// Функция для показа формы ReplacePage
+	function showFormReplacePage() {
+		const btnReplacePage = document.querySelector('#btnReplacePage'),
+		wrapperListOfReplacePage = document.querySelector('.wrapperListOfReplacePage')
 
-		// Функция для показа формы Analysis
-		function showFormAnalysise() {
-			const btnAnalysis = document.querySelector('#btnAnalysis'),
-			wrapperListOfAnalysis = document.querySelector('.wrapperListOfAnalysis')
-	
-			if (btnAnalysis) {
-				btnAnalysis.addEventListener('click', function () {
-					wrapperListOfAnalysis.classList.toggle('active')
-					// Активируем Websocket для анализа страниц
-					singleRequest.analysis.getInitiateWebSocketAnalysis()
-				})
-			}
-		}		
+		if (btnReplacePage) {
+			btnReplacePage.addEventListener('click', function () {
+				wrapperListOfReplacePage.classList.toggle('active')
+				singleRequest.initiateWebSocket()
+				// При клике на кнопку стронг удаляем форму логов
+				const displayBlockLogs = document.querySelector('.displayBlockLogs')
+				if(displayBlockLogs){
+					displayBlockLogs.remove()
+				}
+			})
+		}
+	}
+
+	// Функция для показа формы Analysis
+	function showFormAnalysise() {
+		const btnAnalysis = document.querySelector('#btnAnalysis'),
+		wrapperListOfAnalysis = document.querySelector('.wrapperListOfAnalysis')
+
+		if (btnAnalysis) {
+			btnAnalysis.addEventListener('click', function () {
+				wrapperListOfAnalysis.classList.toggle('active')
+				// Активируем Websocket для анализа страниц
+				singleRequest.analysis.getInitiateWebSocketAnalysis()
+			})
+		}
+	}
+			
 	// Обработчик для кнопок фильтрации
 	document.body.addEventListener('click', function () {
 		document.querySelectorAll('.exclusionButtons').forEach(button => {
@@ -1055,49 +1062,64 @@ document.addEventListener('click', function (event) {
 
 	// Поиск страниц
 	function searchPages() {
-		// Установка обработчика событий на ввод в поле поиска
-		const searchPages = document.querySelector('.searchPages')
-		if (searchPages) {
-			searchPages.oninput = function () {
-				// Получение введенного значения и выборка всех элементов ссылок в таблице
-				let val = this.value.trim().toUpperCase(),
-					allPages = document.querySelectorAll(
-						'.pages_list .pages_list_item .pageWrapper a'
-					),
-					found = false // Переменная для отслеживания наличия совпадений
+		// Получаем элемент поля ввода поиска по классу
+		const searchField = document.querySelector('.searchPages');
+		// Инициализируем переменную для хранения идентификатора таймера задержки
+		let timeout = null;
+	
+		// Проверяем, существует ли поле ввода на странице
+		if (searchField) {
+			// Объявление переменной Получаем все элементы страниц для поиска по селектору
+			let allPages = ""
 
-				// Проверка, не пуст ли введенный запрос
-				if (val !== '') {
-					// Перебор всех элементов ссылок
-					allPages.forEach(function (elem) {
-						let row = elem.closest('.pageWrapper') // Находим ближайший родительский элемент 'tr' для ссылки
-						// Проверка, соответствует ли текст ссылки запросу
-						if (elem.innerText.search(val) === -1) {
-							row.classList.add('hide') // Скрываем строку, если нет совпадения
-						} else {
-							found = true // Устанавливаем флаг в true, если найдено совпадение
-							row.classList.remove('hide') // Показываем строку, если есть совпадение
-							let str = elem.innerText
-							// Вызываем функцию для выделения найденного текста
-							elem.innerHTML = insertMark(
-								str,
-								elem.innerText.search(val),
-								val.length
-							)
-						}
-					})
-				} else {
-					// Если запрос пуст, показываем все строки и сбрасываем изменения в тексте ссылок
-					allPages.forEach(function (elem) {
-						let row = elem.closest('.pageWrapper')
-						row.classList.remove('hide')
-						elem.innerHTML = elem.innerText
-					})
-				}
-			}
+			// Назначаем обработчик события на каждый ввод в поле поиска
+			searchField.oninput = function() {
+				// Очищаем предыдущий таймер задержки, если таковой был установлен
+				clearTimeout(timeout);
+	
+				// Устанавливаем новый таймер задержки
+				timeout = setTimeout(() => {
+					// Получаем значение из поля ввода, удаляем пробелы с обеих сторон и переводим в верхний регистр
+					let val = this.value.trim().toUpperCase();
+	
+					// Проверяем, не пустое ли значение введено
+					if (val !== '') {
+						// Получаем все элементы страниц для поиска по селектору
+						allPages = document.querySelectorAll('.pages_list .pages_list_item .pageWrapper a');
+						// Инициализируем переменную для хранения первого найденного элемента
+						let firstFound = null;
+	
+						// Перебираем все элементы страниц
+						allPages.forEach(elem => {
+							// Получаем текст элемента, приводим к верхнему регистру
+							const text = elem.textContent.toUpperCase();
+	
+							// Проверяем, содержит ли текст искомое значение
+							if (text.includes(val)) {
+								// Если это первое найденное совпадение, сохраняем элемент
+								if (!firstFound) firstFound = elem;
+								// Выделяем найденное совпадение с помощью функции insertMark
+								const index = text.indexOf(val);
+								elem.innerHTML = insertMark(elem.textContent, index, val.length);
+							} else {
+								// Если совпадений нет, возвращаем исходный текст элемента
+								elem.innerHTML = elem.textContent;
+							}
+						});
+	
+						// Если нашли хотя бы одно совпадение, прокручиваем страницу до первого найденного элемента
+						if (firstFound) firstFound.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					} else {
+						// Если строка поиска пуста, сбрасываем выделение для всех элементов
+						allPages.forEach(elem => {
+							elem.innerHTML = elem.textContent;
+						});
+					}
+				}, 500); // Задаем задержку в 500 миллисекунд
+			};
 		}
 	}
-
+	
 	// Вспомогательная функция для формы поиска страниц подсвечивает буквы
 	function insertMark(string, pos, len) {
 		return (
@@ -1320,16 +1342,21 @@ document.addEventListener('click', e => {
 		})
 
 		window.socket.addEventListener('message', event => {
-			const logsDiv = document.querySelector('.logsOther'),
-				logsList = document.querySelector('.logsOther')
-			if (logsDiv) {
+			const logsList = document.querySelector('.logsOther')
+			if (logsList) {
 				if (window.isNewRequest) {
-					logsDiv.innerHTML = '' // Используйте внутренний HTML вместо значения
+					logsList.innerHTML = '' // Используйте внутренний HTML вместо значения
 					window.isNewRequest = false
 				}
 
-				// Добавьте новый HTML-контент. Убедитесь, что он очищен, чтобы предотвратить XSS-атаки.
-				logsDiv.innerHTML += "<p class='logsOtherData'>" + event.data + "</p>" // Добавление разрыва строки с помощью <br>
+				// Контролируем количество одновременных показываемых записей чтобы не было кряша браузера
+				let numberElementsShown = logsList.textContent.split('\n').length
+				if(numberElementsShown <= 20){
+					logsList.innerHTML += "<p class='logsOtherData'>" + event.data + "</p>" // Добавление разрыва строки с помощью <br>
+				}else {
+					// Добавьте новый HTML-контент. Убедитесь, что он очищен, чтобы предотвратить XSS-атаки.
+					logsList.innerHTML = "<p class='logsOtherData'>" + event.data + "</p>" // Добавление разрыва строки с помощью <br>
+				}
 
 				// Автоматическая прокрутка вниз
 				logsList.scrollTop = logsList.scrollHeight
@@ -1339,6 +1366,22 @@ document.addEventListener('click', e => {
 
 			// Убераем Спиннер
 			if(event.data == "FINISH"){
+				let logsOtherData = document.querySelectorAll('.logsOtherData')
+				logsOtherData.forEach(error => {
+					if(error.textContent == "FINISH"){
+						error.classList.add("finish")
+					}
+				})
+				spinner(false)
+			} else if (event.data == "ERROR"){
+				// Если произошла ошибка выводим его красным
+				let logsOtherData = document.querySelectorAll('.logsOtherData')
+				logsOtherData.forEach(error => {
+					if(error.textContent == "ERROR"){
+						error.classList.add("error")
+					}
+				})
+
 				spinner(false)
 			}
 		})
@@ -1625,6 +1668,9 @@ document.addEventListener('click', e => {
 			if(firstInpTextTrim && secondInpTextTrim){
 				spinner(true) // Активируем спиннер
 
+				// Блок с прочими логами
+				logsOther()
+
 				const data = {
 					firstInpTextTrim: firstInpTextTrim,
 					secondInpTextTrim: secondInpTextTrim,
@@ -1653,6 +1699,7 @@ document.addEventListener('click', e => {
 			}).catch(error => {
 				console.log('Что-то пошло не так при отправке данных на сервер в функции replacepagehandler: ', error)
 			}).finally(() => {
+				sendNewRequest()
 				spinner(false)// Отключаем спиннер в любом случае
 			})
 		}
